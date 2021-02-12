@@ -1,5 +1,6 @@
 grammar DynastyLang;
 
+top: (stmt | toplevel_decl)*;
 statements: stmt*;
 stmt: block | expr | if_stmt | for_stmt | while_stmt | declaration;
 block: '{' statements '}';
