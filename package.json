@@ -1,0 +1,28 @@
+{
+  "name": "dynasty-language",
+  "version": "0.1.0",
+  "description": "Dynasty language bootstrapping compiler",
+  "main": "index.ts",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/frodo821/dynasty-lang.git"
+  },
+  "author": "Frodo821, yuseiito",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/frodo821/dynasty-lang/issues"
+  },
+  "homepage": "https://github.com/frodo821/dynasty-lang#readme",
+  "dependencies": {
+    "antlr4ts": "^0.5.0-alpha.4"
+  },
+  "devDependencies": {
+    "antlr4ts-cli": "^0.5.0-alpha.4"
+  }
+}
