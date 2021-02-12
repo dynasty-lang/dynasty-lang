@@ -2,12 +2,13 @@
   "name": "dynasty-language",
   "version": "0.1.0",
   "description": "Dynasty language bootstrapping compiler",
-  "main": "index.ts",
+  "main": "dist/index.js",
   "directories": {
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "antlr": "antlr4ts -visitor -o src/generated docs/DynastyLang.g4"
   },
   "repository": {
     "type": "git",
