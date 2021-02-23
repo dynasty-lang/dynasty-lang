@@ -75,6 +75,9 @@ ELSE: 'else';
 VAR: 'var';
 INV: 'inv';
 AS: 'as';
+AND: 'and';
+OR: 'or';
+XOR: 'xor';
 DOT: '.';
 ASTERISK: '*';
 COMMA: ',';
@@ -86,6 +89,21 @@ LPAR: '(';
 RPAR: ')';
 LBRA: '{';
 RBRA: '}';
+POW: '**';
+DIV: '/';
+ADD: '+';
+SUB: '-';
+BAND: '&';
+BOR: '|';
+BXOR: '^';
+SHR: '>>';
+SHL: '<<';
+GT: '>';
+GE: '>=';
+EQL: '==';
+NE: '!=';
+LE: '<=';
+LT: '<';
 
 IDENT: ('a' ..'z' | 'A' ..'Z' | '_') (
 		'a' ..'z'

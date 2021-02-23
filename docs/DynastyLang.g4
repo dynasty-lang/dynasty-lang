@@ -21,7 +21,10 @@ block: LBRA block_statements RBRA;
 if_stmt: IF LPAR expr RPAR block;
 for_stmt: FOR LPAR IDENT IN expr RPAR block;
 while_stmt: WHILE LPAR expr RPAR block;
-expr: if_expr | block_expr | biary_op | unary_op | literals;
+
+expr: san_expr | operations;
+
+san_expr: if_expr | block_expr | literals | (LPAR expr RPAR);
 
 type_decl: TYPE fqn EQ type_desc;
 type_desc: fqn | type_lit;
@@ -63,3 +66,21 @@ literals:
 	| RAW_STR_LIT
 	| TRIPLE_STR_LIT
 	| TRIPLE_RAW_STR_LIT;
+
+operations: op6 | op5 | op4 | op3 | op2 | op1 | op0;
+
+op6: san_expr op6_right;
+op5: san_expr op5_right;
+op4: san_expr op4_right;
+op3: san_expr op3_right;
+op2: san_expr op2_right;
+op1: san_expr op1_right;
+op0: san_expr op0_right;
+
+op6_right: expr | POW expr;
+op5_right: expr | (ASTERISK | DIV) expr;
+op4_right: expr | (ADD | SUB) expr;
+op3_right: expr | (BAND | BOR | BXOR) expr;
+op2_right: expr | (SHL | SHR) expr;
+op1_right: expr | (GT | GE | EQL | NE | LE | LT) expr;
+op0_right: expr | (AND | OR | XOR) expr;
