@@ -75,7 +75,7 @@ op4: san_expr op4_right;
 op3: san_expr op3_right;
 op2: san_expr op2_right;
 op1: san_expr op1_right;
-op0: san_expr op0_right;
+op0: san_expr op0_right | NOT expr;
 
 op6_right: expr | POW expr;
 op5_right: expr | (ASTERISK | DIV) expr;

@@ -78,6 +78,7 @@ AS: 'as';
 AND: 'and';
 OR: 'or';
 XOR: 'xor';
+NOT: 'not';
 DOT: '.';
 ASTERISK: '*';
 COMMA: ',';
