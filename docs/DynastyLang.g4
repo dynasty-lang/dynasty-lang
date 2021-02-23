@@ -27,11 +27,19 @@ expr: san_expr | operations;
 san_expr: if_expr | block_expr | literals | (LPAR expr RPAR);
 
 type_decl: TYPE fqn EQ type_desc;
-type_desc: fqn | type_lit;
+type_desc: type_desc_san | array_type_lit;
+type_desc_san: fqn | type_lit;
 
 type_lit: fqn? LBRA member_list RBRA;
 member_list: (member_item SEMICOLON)*;
 member_item: IDENT COLON type_desc;
+
+array_type_lit: type_desc_san array_type_right;
+array_type_right:
+	array_type_len array_type_right
+	| array_type_len;
+array_type_len:
+	LSQR (INT_HEX | INT_DEC | INT_OCT | INT_BIN) RSQR;
 
 import_decl: import_from | import_stmt;
 import_stmt: IMPORT fqn (AS IDENT)?;
@@ -78,7 +86,7 @@ op1: san_expr op1_right;
 op0: san_expr op0_right | NOT expr;
 
 op6_right: expr | POW expr;
-op5_right: expr | (ASTERISK | DIV) expr;
+op5_right: expr | (ASTERISK | DIV | MOD) expr;
 op4_right: expr | (ADD | SUB) expr;
 op3_right: expr | (BAND | BOR | BXOR) expr;
 op2_right: expr | (SHL | SHR) expr;
