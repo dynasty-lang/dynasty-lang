@@ -24,7 +24,12 @@ while_stmt: WHILE LPAR expr RPAR block;
 
 expr: san_expr | operations;
 
-san_expr: if_expr | block_expr | literals | (LPAR expr RPAR);
+san_expr:
+	if_expr
+	| block_expr
+	| literals
+	| call_expr
+	| (LPAR expr RPAR);
 
 type_decl: TYPE fqn EQ type_desc;
 type_desc: type_desc_san | array_type_lit;
@@ -49,19 +54,23 @@ import_list: (import_name COMMA)* import_name (COMMA import_rest)?
 import_rest: ASTERISK IDENT;
 import_name: IDENT (AS IDENT);
 
-fn_decl: FN fqn LPAR arg_list RPAR (RARROW type_desc)? block;
+fn_decl: FN fqn LPAR par_list? RPAR (RARROW type_desc)? block;
 
 block_expr: block;
 
-if_expr: IF LPAR expr RPAR expr ELSE expr;
+if_expr: IF LPAR expr RPAR expr (ELSE expr)?;
 
 var_decl: VAR IDENT EQ expr;
 const_decl: INV IDENT EQ expr;
 
-arg_list: (arg_item ',')* arg_item;
-arg_item: IDENT COLON type_desc;
+par_list: (par_item ',')* par_item;
+par_item: IDENT COLON type_desc;
 
 return_stmt: RETURN expr?;
+
+call_expr: fqn LPAR arg_list? RPAR;
+arg_list: (expr ',')* (expr | (named_arg ',')* named_arg);
+named_arg: IDENT COLON expr;
 
 literals:
 	FLOAT
