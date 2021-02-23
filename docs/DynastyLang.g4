@@ -40,6 +40,13 @@ import_name: IDENT (AS IDENT);
 
 fn_decl: FN fqn LPAR arg_list RPAR (RARROW type_desc)? block;
 
+block_expr: block;
+
+if_expr: IF LPAR expr RPAR expr ELSE expr;
+
+var_decl: VAR IDENT EQ expr;
+const_decl: INV IDENT EQ expr;
+
 arg_list: (arg_item ',')* arg_item;
 arg_item: IDENT COLON type_desc;
 
