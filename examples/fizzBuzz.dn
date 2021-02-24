@@ -1,0 +1,16 @@
+fn Program.main(args: string[]) -> void {
+  for(i in range(0, 100)) {
+    print({
+      if (i mod 15 == 0) {
+        return "FizzBuzz";
+      }
+      if (i mod 3 == 0) {
+        return "Fizz";
+      }
+      if (i mod 5 == 0) {
+        return "Buzz";
+      }
+      return str(i);
+    });
+  }
+}

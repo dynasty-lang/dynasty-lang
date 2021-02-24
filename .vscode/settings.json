@@ -1,3 +1,6 @@
 {
-  
+  "antlr4.referencesCodeLens.enabled": true,
+  "antlr4.generation": {
+    "mode": "none"
+  }
 }

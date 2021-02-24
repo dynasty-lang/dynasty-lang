@@ -2,3 +2,4 @@ node_modules/
 dist/
 .antlr/
 generated/
+tsconfig.tsbuildinfo
