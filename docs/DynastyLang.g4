@@ -23,7 +23,7 @@ for_stmt:
 	FOR LPAR name = ident IN iter = expr[0] RPAR stmts = block;
 while_stmt: WHILE LPAR cond = expr[0] RPAR stmts = block;
 
-expr[priority]: san_expr | operations[$priority];
+expr[int priority]: san_expr | operations[$priority];
 
 san_expr:
 	if_expr
@@ -39,7 +39,7 @@ type_decl: TYPE name = fqn EQ desc = type_desc;
 type_desc: type_desc_san | array_type_lit;
 type_desc_san: fqn | type_lit;
 
-type_lit: super = fqn? LBRA members = member_list RBRA;
+type_lit: super_ = fqn? LBRA members = member_list RBRA;
 member_list: (items += member_item SEMICOLON)*;
 member_item: name = ident COLON desc = type_desc;
 
@@ -66,7 +66,7 @@ block_expr: block;
 
 if_expr:
 	IF LPAR cond = expr[0] RPAR then = expr[0] (
-		ELSE else = expr[0]
+		ELSE else_ = expr[0]
 	)?;
 
 var_decl: VAR name = ident EQ value = expr[0];
@@ -92,14 +92,14 @@ str_lit:
 		| TRIPLE_RAW_STR_LIT
 	);
 
-operations[number priority]:
-	{6 >= $priority}? san_expr op6 expr[6]
-	| {5 >= $priority}? san_expr op5 expr[5]
-	| {4 >= $priority}? san_expr op4 expr[4]
-	| {3 >= $priority}? san_expr op3 expr[3]
-	| {2 >= $priority}? san_expr op2 expr[2]
-	| {1 >= $priority}? san_expr op1 expr[1]
-	| san_expr op0 expr[0];
+operations[int priority]:
+	<assoc = right>san_expr op6 expr[6]
+	| <assoc = right>{6 > $priority}? san_expr op5 expr[5]
+	| <assoc = right> {5 > $priority}? san_expr op4 expr[4]
+	| <assoc = right>{4 > $priority}? san_expr op3 expr[3]
+	| <assoc = right> {3 > $priority}? san_expr op2 expr[2]
+	| <assoc = right> {2 > $priority}? san_expr op1 expr[1]
+	| <assoc = right>{1 > $priority}? san_expr op0 expr[0];
 
 op6: op = POW;
 op5: op = (ASTERISK | DIV | MOD);
