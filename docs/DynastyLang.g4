@@ -70,15 +70,15 @@ if_expr:
 var_decl: VAR name = ident EQ value = expr;
 const_decl: INV name = ident EQ value = expr;
 
-par_list: par_item | par_item ',' par_list;
-par_item: ident COLON type_desc;
+par_list: (params += par_item COMMA)* params += par_item;
+par_item: name = ident COLON type = type_desc;
 
 return_stmt: RETURN value = expr? SEMICOLON;
 
 call_expr: name = fqn LPAR args = arg_list? RPAR;
-arg_list: (expr ',')* (expr | named_arg_list);
-named_arg_list: (named_arg ',')* named_arg;
-named_arg: ident COLON expr;
+arg_list: (expr COMMA)* (expr | named_arg_list);
+named_arg_list: (args += named_arg COMMA)* args += named_arg;
+named_arg: name = ident COLON value = expr;
 
 float_lit: value = (FLOAT | EXPONENTIAL);
 int_lit: value = (INT_BIN | INT_OCT | INT_DEC | INT_HEX);
