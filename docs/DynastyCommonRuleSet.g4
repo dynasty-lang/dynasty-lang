@@ -2,4 +2,4 @@ grammar DynastyCommonRuleSet;
 
 import DynastyLexerRuleSet;
 
-fqn: (IDENT DOT)* IDENT;
+fqn: (names += IDENT DOT)* names += IDENT;

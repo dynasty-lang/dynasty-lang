@@ -1,10 +1,11 @@
 lexer grammar DynastyLexerRuleSet;
 
-INT_SUF: ('i' | 'u') ('8' | '16' | '32' | '64');
-DEC_CHR: '0' .. '9';
-HEX_CHR: (DEC_CHR | 'a' ..'f' | 'A' ..'F');
+fragment INT_DEC_NUM: '0' | ('1' ..'9') (DEC_CHR | '_')*;
+fragment INT_SUF: ('i' | 'u') ('8' | '16' | '32' | '64');
+fragment DEC_CHR: '0' .. '9';
+fragment HEX_CHR: (DEC_CHR | 'a' ..'f' | 'A' ..'F');
 
-INT_DEC: ('1' ..'9') (DEC_CHR | '_')* INT_SUF?;
+INT_DEC: INT_DEC_NUM INT_SUF?;
 
 INT_HEX: '0x' HEX_CHR (HEX_CHR | '_')* INT_SUF?;
 
@@ -21,7 +22,7 @@ FLOAT: (
 		| (((DEC_CHR) (DEC_CHR | '_')) '.')
 	) ('f' | 'd')?;
 
-EXPONENTIAL: FLOAT [eE] [+-]? ('1' ..'9') (DEC_CHR | '_')*;
+EXPONENTIAL: FLOAT [eE] [+-]? INT_DEC_NUM;
 
 STR_LIT:
 	'"' (
