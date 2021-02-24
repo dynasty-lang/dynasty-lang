@@ -1,34 +1,40 @@
-import * as fs from 'fs'
-import { CharStreams, CommonTokenStream, TokenStream, ParserRuleContext } from 'antlr4ts';
+import * as fs from 'fs';
+import {
+  CharStreams,
+  CommonTokenStream,
+  TokenStream,
+  ParserRuleContext,
+} from 'antlr4ts';
 import parseArgs from 'command-line-args';
 import { DynastyLangLexer } from './generated/DynastyLangLexer';
 import { DynastyLangParser } from './generated/DynastyLangParser';
 import { ASTWriteOutVisitor } from './lib/writeoutVisitor';
+import { BuildAstVisitor } from './lib/buildAstVisitor';
 
 function getTokenStream(content: string): TokenStream {
   const lexer = new DynastyLangLexer(CharStreams.fromString(content));
   return new CommonTokenStream(lexer);
 }
 
-
 function parse(tokenStream: TokenStream): ParserRuleContext {
   const parser = new DynastyLangParser(tokenStream);
   return parser.top();
 }
 
-
 function writeout(tree: ParserRuleContext) {
-  let visitor = new ASTWriteOutVisitor();
+  let visitor = new BuildAstVisitor();
   visitor.visit(tree);
 }
 
 function entry() {
-  const args = parseArgs([{
-    name: 'input',
-    alias: 'i',
-    multiple: true,
-    type: String
-  }]);
+  const args = parseArgs([
+    {
+      name: 'input',
+      alias: 'i',
+      multiple: true,
+      type: String,
+    },
+  ]);
   const inputFiles: string[] = args['input'];
   if (!inputFiles) {
     return;

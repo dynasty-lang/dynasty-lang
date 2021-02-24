@@ -1,23 +1,97 @@
-import { AbstractParseTreeVisitor } from "antlr4ts/tree/AbstractParseTreeVisitor";
-import { ErrorNode } from "antlr4ts/tree/ErrorNode";
-import { ParseTree } from "antlr4ts/tree/ParseTree";
-import { RuleNode } from "antlr4ts/tree/RuleNode";
-import { TerminalNode } from "antlr4ts/tree/TerminalNode";
-import { dnkEmpty, Node } from "../ast/node";
-import { TopContext, Block_statementsContext, StmtContext, IdentContext, Toplevel_declContext, DeclarationContext, BlockContext, If_stmtContext, For_stmtContext, While_stmtContext, ExprContext, San_exprContext, Type_declContext, Type_descContext, Type_desc_sanContext, Type_litContext, Member_listContext, Member_itemContext, Array_type_litContext, Array_type_lenContext, Import_declContext, Import_stmtContext, Import_fromContext, Import_listContext, Import_restContext, Import_nameContext, Fn_declContext, Block_exprContext, If_exprContext, Var_declContext, Const_declContext, Par_listContext, Par_itemContext, Return_stmtContext, Call_exprContext, Arg_listContext, Named_arg_listContext, Named_argContext, Float_litContext, Int_litContext, Str_litContext, OperationsContext, Op6Context, Op5Context, Op4Context, Op3Context, Op2Context, Op1Context, Op0Context, Op6_rightContext, Op5_rightContext, Op4_rightContext, Op3_rightContext, Op2_rightContext, Op1_rightContext, Op0_rightContext, ParContext, FqnContext } from "../generated/DynastyLangParser";
-import { DynastyLangVisitor } from "../generated/DynastyLangVisitor";
+import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor';
+import { ParseTree } from 'antlr4ts/tree/ParseTree';
+import { RuleNode } from 'antlr4ts/tree/RuleNode';
+import { dnkEmpty, Node } from '../ast/node';
+import {
+  TopContext,
+  Block_statementsContext,
+  StmtContext,
+  IdentContext,
+  Toplevel_declContext,
+  DeclarationContext,
+  BlockContext,
+  If_stmtContext,
+  For_stmtContext,
+  While_stmtContext,
+  ExprContext,
+  San_exprContext,
+  Type_declContext,
+  Type_descContext,
+  Type_desc_sanContext,
+  Type_litContext,
+  Member_listContext,
+  Member_itemContext,
+  Array_type_litContext,
+  Import_declContext,
+  Import_stmtContext,
+  Import_fromContext,
+  Import_listContext,
+  Import_restContext,
+  Import_nameContext,
+  Fn_declContext,
+  Block_exprContext,
+  If_exprContext,
+  Var_declContext,
+  Const_declContext,
+  Par_listContext,
+  Par_itemContext,
+  Return_stmtContext,
+  Call_exprContext,
+  Arg_listContext,
+  Named_arg_listContext,
+  Named_argContext,
+  Float_litContext,
+  Int_litContext,
+  Str_litContext,
+  OperationsContext,
+  ParContext,
+  FqnContext,
+} from '../generated/DynastyLangParser';
+import { DynastyLangVisitor } from '../generated/DynastyLangVisitor';
 
-export class ASTWriteOutVisitor extends AbstractParseTreeVisitor<Node> implements DynastyLangVisitor<Node> {
+type Operations =
+  | '**'
+  | '*'
+  | '/'
+  | 'mod'
+  | '+'
+  | '-'
+  | 'not'
+  | '&'
+  | '|'
+  | '^'
+  | '<<'
+  | '>>'
+  | '>'
+  | '>='
+  | '=='
+  | '!='
+  | '<='
+  | '<'
+  | 'and'
+  | 'or'
+  | 'xor';
+
+type FormulaElement = Node | Operations;
+
+function isOperationsContext(node: ParseTree): node is OperationsContext {
+  return '_op' in node;
+}
+
+export class BuildAstVisitor
+  extends AbstractParseTreeVisitor<Node>
+  implements DynastyLangVisitor<Node> {
+  // #region Node Transformations
   visitTop(ctx: TopContext): Node {
     return {
       kind: 'dnkTop',
-      children: this.aggregateChildren(ctx)
+      children: this.aggregateChildren(ctx),
     };
   }
   visitBlock_statements(ctx: Block_statementsContext): Node {
     return {
       kind: 'dnkBlock',
-      children: this.aggregateChildren(ctx)
+      children: this.aggregateChildren(ctx),
     };
   }
   visitStmt(ctx: StmtContext): Node {
@@ -27,7 +101,7 @@ export class ASTWriteOutVisitor extends AbstractParseTreeVisitor<Node> implement
     return {
       kind: 'dnkIdent',
       value: ctx._name.text,
-      children: []
+      children: [],
     };
   }
   visitToplevel_decl(ctx: Toplevel_declContext): Node {
@@ -46,14 +120,14 @@ export class ASTWriteOutVisitor extends AbstractParseTreeVisitor<Node> implement
     return {
       kind: 'dnkFor',
       value: [this.visit(ctx._name), this.visit(ctx._iter)],
-      children: [this.visit(ctx._stmts)]
+      children: [this.visit(ctx._stmts)],
     };
   }
   visitWhile_stmt(ctx: While_stmtContext): Node {
     return {
       kind: 'dnkWhile',
       value: this.visit(ctx._cond),
-      children: [this.visit(ctx._stmts)]
+      children: [this.visit(ctx._stmts)],
     };
   }
   visitExpr(ctx: ExprContext): Node {
@@ -66,7 +140,7 @@ export class ASTWriteOutVisitor extends AbstractParseTreeVisitor<Node> implement
     return {
       kind: 'dnkTypeDecl',
       value: this.visit(ctx._name),
-      children: [this.visit(ctx._desc)]
+      children: [this.visit(ctx._desc)],
     };
   }
   visitType_desc(ctx: Type_descContext): Node {
@@ -78,24 +152,26 @@ export class ASTWriteOutVisitor extends AbstractParseTreeVisitor<Node> implement
   visitType_lit(ctx: Type_litContext): Node {
     return {
       kind: 'dnkTypeLit',
-      value: ctx._super && this.visit(ctx._super),
-      children: this.aggregateChildren(ctx._members)
+      value: ctx._super_ && this.visit(ctx._super_),
+      children: this.aggregateChildren(ctx._members),
     };
   }
   visitMember_list(ctx: Member_listContext): Node {
-    throw new Error("assertion error: this is unreachable code.");
+    throw new Error('assertion error: this is unreachable code.');
   }
   visitMember_item(ctx: Member_itemContext): Node {
     return {
       kind: 'dnkTypeLit',
-      children: [this.visit(ctx._name), this.visit(ctx._name)]
+      children: [this.visit(ctx._name), this.visit(ctx._name)],
     };
   }
   visitArray_type_lit(ctx: Array_type_litContext): Node {
     return {
       kind: 'dnkArrayTypeLit',
-      value: ctx._dims.map(it => parseInt(it._length.text || "-1")),
-      children: [this.visit(ctx.getChild(0))]
+      value: ctx._dims.map((it) =>
+        parseInt((it._length || { text: '-1' }).text || '-1')
+      ),
+      children: [this.visit(ctx.getChild(0))],
     };
   }
   visitImport_decl(ctx: Import_declContext): Node {
@@ -104,158 +180,195 @@ export class ASTWriteOutVisitor extends AbstractParseTreeVisitor<Node> implement
   visitImport_stmt(ctx: Import_stmtContext): Node {
     return {
       kind: 'dnkImport',
-      children: [this.visit(ctx._module), ctx._alt && this.visit(ctx._alt)]
+      children: [this.visit(ctx._module), ctx._alt && this.visit(ctx._alt)],
     };
   }
   visitImport_from(ctx: Import_fromContext): Node {
     return {
       kind: 'dnkImportFrom',
       value: this.visit(ctx._module),
-      children: this.aggregateChildren(ctx._list)
+      children: this.aggregateChildren(ctx._list),
     };
   }
   visitImport_list(ctx: Import_listContext): Node {
     return {
       kind: 'dnkImportList',
       value: ctx._rest && this.visit(ctx._rest._name),
-      children: (ctx._names || []).map(it => this.visit(it))
+      children: (ctx._names || []).map((it) => this.visit(it)),
     };
   }
   visitImport_rest(ctx: Import_restContext): Node {
-    throw new Error("assertion error: this is unreachable code.");
+    throw new Error('assertion error: this is unreachable code.');
   }
   visitImport_name(ctx: Import_nameContext): Node {
     return {
       kind: 'dnkImportName',
-      children: [this.visit(ctx._name), ctx._alt && this.visit(ctx._alt)]
+      children: [this.visit(ctx._name), ctx._alt && this.visit(ctx._alt)],
     };
   }
   visitFn_decl(ctx: Fn_declContext): Node {
     return {
       kind: 'dnkFnDecl',
-      value: [this.visit(ctx._name), ctx._params && this.visit(ctx._params), ctx._ret_type && this.visit(ctx._ret_type)],
-      children: [this.visit(ctx._stmts)]
+      value: [
+        this.visit(ctx._name),
+        ctx._params && this.visit(ctx._params),
+        ctx._ret_type && this.visit(ctx._ret_type),
+      ],
+      children: [this.visit(ctx._stmts)],
     };
   }
   visitBlock_expr(ctx: Block_exprContext): Node {
     return {
       kind: 'dnkBlockExpr',
-      children: [this.visit(ctx.getChild(0))]
+      children: [this.visit(ctx.getChild(0))],
     };
   }
   visitIf_expr(ctx: If_exprContext): Node {
     return {
       kind: 'dnkIfExpr',
       value: this.visit(ctx._cond),
-      children: [this.visit(ctx._then), ctx._else && [this.visit(ctx._else)] || []].flat()
+      children: [
+        this.visit(ctx._then),
+        (ctx._else_ && [this.visit(ctx._else_)]) || [],
+      ].flat(),
     };
   }
   visitVar_decl(ctx: Var_declContext): Node {
     return {
       kind: 'dnkVarDecl',
-      children: [this.visit(ctx._name), this.visit(ctx._value)]
+      children: [this.visit(ctx._name), this.visit(ctx._value)],
     };
   }
   visitConst_decl(ctx: Const_declContext): Node {
     return {
       kind: 'dnkConstDecl',
-      children: [this.visit(ctx._name), this.visit(ctx._value)]
+      children: [this.visit(ctx._name), this.visit(ctx._value)],
     };
   }
   visitPar_list(ctx: Par_listContext): Node {
     return {
       kind: 'dnkParamList',
-      children: (ctx._params || []).map(it => this.visit(it))
-    }
+      children: (ctx._params || []).map((it) => this.visit(it)),
+    };
   }
   visitPar_item(ctx: Par_itemContext): Node {
     return {
       kind: 'dnkParamItem',
-      children: [this.visit(ctx._name), this.visit(ctx._type)]
-    }
+      children: [this.visit(ctx._name), this.visit(ctx._type)],
+    };
   }
   visitReturn_stmt(ctx: Return_stmtContext): Node {
     return {
       kind: 'dnkReturn',
-      children: [this.visit(ctx._value)]
-    }
+      children: [this.visit(ctx._value)],
+    };
   }
   visitCall_expr(ctx: Call_exprContext): Node {
     return {
       kind: 'dnkCallExpr',
       value: this.visit(ctx._name),
-      children: ctx._args && this.aggregateChildren(ctx._args) || dnkEmpty
-    }
+      children: (ctx._args && this.aggregateChildren(ctx._args)) || dnkEmpty,
+    };
   }
   visitArg_list(ctx: Arg_listContext): Node {
-    throw new Error("assertion error: this is unreachable code.");
+    throw new Error('assertion error: this is unreachable code.');
   }
   visitNamed_arg_list(ctx: Named_arg_listContext): Node {
     return {
       kind: 'dnkNamedArgList',
-      children: ctx._args.map(it => this.visit(it))
-    }
+      children: ctx._args.map((it) => this.visit(it)),
+    };
   }
   visitNamed_arg(ctx: Named_argContext): Node {
     return {
       kind: 'dnkNamedArg',
-      children: [this.visit(ctx._name), this.visit(ctx._value)]
-    }
+      children: [this.visit(ctx._name), this.visit(ctx._value)],
+    };
   }
   visitFloat_lit(ctx: Float_litContext): Node {
     return {
       kind: 'dnkFloatLit',
-      value: parseFloat(ctx._value.text || "NaN"),
-      children: []
-    }
+      value: parseFloat(ctx._value.text || 'NaN'),
+      children: [],
+    };
   }
   visitInt_lit(ctx: Int_litContext): Node {
     return {
       kind: 'dnkIntLit',
-      value: parseInt(ctx._value.text || "NaN"),
-      children: []
-    }
+      value: parseInt(ctx._value.text || 'NaN'),
+      children: [],
+    };
   }
   visitStr_lit(ctx: Str_litContext): Node {
     return {
       kind: 'dnkStrLit',
-      value: [ctx._value.text?.startsWith('r') ? 'r' : 's', ctx._value.text?.replace(/^r?"+/, "")?.replace(/"+$/, "") ?? ""],
-      children: []
-    }
+      value: [
+        (ctx._value.text || '').startsWith('r') ? 'r' : 's',
+        (ctx._value.text || '').replace(/^r?"+/, '').replace(/"+$/, '') || '',
+      ],
+      children: [],
+    };
   }
+
+  visitPar(ctx: ParContext): Node {
+    return {
+      kind: 'dnkPar',
+      children: [this.visit(ctx._expression)],
+    };
+  }
+
+  visitFqn(ctx: FqnContext): Node {
+    return {
+      kind: 'dnkFqn',
+      value: ctx._names.map((it) => it.text),
+      children: [],
+    };
+  }
+  // #endregion
+
   visitOperations(ctx: OperationsContext): Node {
+    let formula = this.collectOperations(ctx);
+    return this.reshakeOperations(formula);
+  }
+
+  collectOperations(ctx: OperationsContext): FormulaElement[] {
+    let context = ctx;
+    let result: FormulaElement[] = [];
+    while (true) {
+      if (context._left) {
+        result.push(this.visit(context._left));
+      }
+
+      result.push(context._op.text as Operations);
+
+      let node = context._right.getChild(0);
+
+      if (!isOperationsContext(node)) {
+        result.push(this.visit(node));
+        break;
+      }
+
+      context = node;
+    }
+    return result;
+  }
+
+  reshakeOperations(formula: FormulaElement[]): Node {
     return {
       kind: 'dnkOperations',
-      children: []
-    }
-    // return this.visit(ctx.getChild(0));
+      children: [],
+    };
   }
-  // visitOp6(ctx: Op6Context): Node { }
-  // visitOp5(ctx: Op5Context): Node { }
-  // visitOp4(ctx: Op4Context): Node { }
-  // visitOp3(ctx: Op3Context): Node { }
-  // visitOp2(ctx: Op2Context): Node { }
-  // visitOp1(ctx: Op1Context): Node { }
-  // visitOp0(ctx: Op0Context): Node { }
-  // visitOp6_right(ctx: Op6_rightContext): Node { }
-  // visitOp5_right(ctx: Op5_rightContext): Node { }
-  // visitOp4_right(ctx: Op4_rightContext): Node { }
-  // visitOp3_right(ctx: Op3_rightContext): Node { }
-  // visitOp2_right(ctx: Op2_rightContext): Node { }
-  // visitOp1_right(ctx: Op1_rightContext): Node { }
-  // visitOp0_right(ctx: Op0_rightContext): Node { }
-  // visitPar(ctx: ParContext): Node { }
-  // visitFqn(ctx: FqnContext): Node { }
 
   aggregateChildren(node: RuleNode): Node[] {
     let result: Node[] = [];
     for (let i = 0; i < node.childCount; i++) {
       result.push(node.getChild(i).accept(this));
-    };
+    }
     return result;
   }
 
   protected defaultResult(): Node {
-    throw new Error("Method not implemented.");
+    return dnkEmpty;
   }
 }
