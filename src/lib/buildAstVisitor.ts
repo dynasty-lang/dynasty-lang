@@ -1,7 +1,15 @@
 import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor';
 import { ParseTree } from 'antlr4ts/tree/ParseTree';
 import { RuleNode } from 'antlr4ts/tree/RuleNode';
-import { dnkEmpty, Node } from '../ast/node';
+import {
+  dnkEmpty,
+  Node,
+  Operations,
+  unaryOperators,
+  biaryOperators,
+  UnaryOperators,
+  BiaryOperators,
+} from '../ast/node';
 import {
   TopContext,
   Block_statementsContext,
@@ -48,29 +56,6 @@ import {
   FqnContext,
 } from '../generated/DynastyLangParser';
 import { DynastyLangVisitor } from '../generated/DynastyLangVisitor';
-
-type Operations =
-  | '**'
-  | '*'
-  | '/'
-  | 'mod'
-  | '+'
-  | '-'
-  | 'not'
-  | '&'
-  | '|'
-  | '^'
-  | '<<'
-  | '>>'
-  | '>'
-  | '>='
-  | '=='
-  | '!='
-  | '<='
-  | '<'
-  | 'and'
-  | 'or'
-  | 'xor';
 
 type FormulaElement = Node | Operations;
 
@@ -211,8 +196,8 @@ export class BuildAstVisitor
       kind: 'dnkFnDecl',
       value: [
         this.visit(ctx._name),
-        ctx._params && this.visit(ctx._params),
-        ctx._ret_type && this.visit(ctx._ret_type),
+        (ctx._params && this.visit(ctx._params)) || dnkEmpty,
+        (ctx._ret_type && this.visit(ctx._ret_type)) || dnkEmpty,
       ],
       children: [this.visit(ctx._stmts)],
     };
@@ -328,10 +313,11 @@ export class BuildAstVisitor
 
   visitOperations(ctx: OperationsContext): Node {
     let formula = this.collectOperations(ctx);
-    return this.reshakeOperations(formula);
+    let result = this.reshakeOperations(formula);
+    return result;
   }
 
-  collectOperations(ctx: OperationsContext): FormulaElement[] {
+  private collectOperations(ctx: OperationsContext): FormulaElement[] {
     let context = ctx;
     let result: FormulaElement[] = [];
     while (true) {
@@ -353,11 +339,90 @@ export class BuildAstVisitor
     return result;
   }
 
-  reshakeOperations(formula: FormulaElement[]): Node {
-    return {
-      kind: 'dnkOperations',
-      children: [],
-    };
+  private reshakeOperations(formula: FormulaElement[]): Node {
+    let current = formula;
+    while (current.length > 1) {
+      let next: FormulaElement[] = [];
+      let skipNext: boolean = false;
+      let maxPrecedence = this.scanMaximumOperatorPrecedence(current);
+
+      for (let i = 0; i < current.length; i++) {
+        if (skipNext) {
+          skipNext = false;
+          continue;
+        }
+
+        let element = current[i];
+
+        if (typeof element === 'object') {
+          next.push(element);
+          continue;
+        }
+
+        if (element in unaryOperators) {
+          if (typeof current[i + 1] === 'string') {
+            next.push(element);
+            continue;
+          }
+
+          next.push({
+            kind: 'dnkOperations',
+            value: element,
+            children: [current[i + 1] as Node],
+          });
+          skipNext = true;
+          continue;
+        }
+
+        if (element in biaryOperators) {
+          if (biaryOperators[element as BiaryOperators] != maxPrecedence) {
+            next.push(element);
+            continue;
+          }
+
+          if (typeof current[i + 1] === 'string') {
+            next.push(element);
+            continue;
+          }
+
+          if (typeof current[i - 1] === 'string') {
+            throw new Error(
+              `syntax error:corrupted formula: "${formula
+                .map((it) =>
+                  typeof it === 'string' ? it : (it.value || '').toString()
+                )
+                .join(' ')}"`
+            );
+          }
+
+          next.pop();
+          next.push({
+            kind: 'dnkOperations',
+            value: element,
+            children: [current[i - 1] as Node, current[i + 1] as Node],
+          });
+          skipNext = true;
+        }
+      }
+      if (next.length != 1 && current.length == next.length) {
+        throw new Error('syntax error:corrupted formula');
+      }
+      current = next;
+    }
+    return current[0] as Node;
+  }
+
+  private scanMaximumOperatorPrecedence(formula: FormulaElement[]): number {
+    return Math.max(
+      ...formula
+        .filter((it) => typeof it === 'string' && !(it in unaryOperators))
+        .map((it) => {
+          if (!((it as string) in biaryOperators)) {
+            throw new Error('syntax error:unknown operator: ' + it);
+          }
+          return biaryOperators[it as BiaryOperators];
+        })
+    );
   }
 
   aggregateChildren(node: RuleNode): Node[] {

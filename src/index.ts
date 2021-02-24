@@ -8,8 +8,8 @@ import {
 import parseArgs from 'command-line-args';
 import { DynastyLangLexer } from './generated/DynastyLangLexer';
 import { DynastyLangParser } from './generated/DynastyLangParser';
-import { ASTWriteOutVisitor } from './lib/writeoutVisitor';
 import { BuildAstVisitor } from './lib/buildAstVisitor';
+import { Node, dumpAst } from './ast/node';
 
 function getTokenStream(content: string): TokenStream {
   const lexer = new DynastyLangLexer(CharStreams.fromString(content));
@@ -21,9 +21,9 @@ function parse(tokenStream: TokenStream): ParserRuleContext {
   return parser.top();
 }
 
-function writeout(tree: ParserRuleContext) {
+function generateAst(tree: ParserRuleContext): Node {
   let visitor = new BuildAstVisitor();
-  visitor.visit(tree);
+  return visitor.visit(tree);
 }
 
 function entry() {
@@ -43,7 +43,8 @@ function entry() {
     const content = fs.readFileSync(it, { encoding: 'utf-8' });
     const tokenStream = getTokenStream(content);
     const tree = parse(tokenStream);
-    writeout(tree);
+    const ast = generateAst(tree);
+    dumpAst(ast);
   });
 }
 
