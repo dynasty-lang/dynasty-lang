@@ -18,9 +18,10 @@ toplevel_decl: type_decl | import_decl;
 declaration: fn_decl | var_decl | const_decl;
 
 block: LBRA block_statements RBRA;
-if_stmt: IF LPAR expr RPAR block;
-for_stmt: FOR LPAR ident IN expr RPAR block;
-while_stmt: WHILE LPAR expr RPAR block;
+if_stmt: if_expr;
+for_stmt:
+	FOR LPAR name = ident IN iter = expr RPAR stmts = block;
+while_stmt: WHILE LPAR cond = expr RPAR stmts = block;
 
 expr: san_expr | operations;
 
@@ -34,44 +35,47 @@ san_expr:
 	| str_lit
 	| ident;
 
-type_decl: TYPE fqn EQ type_desc;
+type_decl: TYPE name = fqn EQ desc = type_desc;
 type_desc: type_desc_san | array_type_lit;
 type_desc_san: fqn | type_lit;
 
-type_lit: fqn? LBRA member_list RBRA;
-member_list: (member_item SEMICOLON)*;
-member_item: ident COLON type_desc;
+type_lit: super = fqn? LBRA members = member_list RBRA;
+member_list: (items += member_item SEMICOLON)*;
+member_item: name = ident COLON desc = type_desc;
 
-array_type_lit: type_desc_san array_type_right;
-array_type_right:
-	array_type_len array_type_right
-	| array_type_len;
+array_type_lit: type_desc_san dims += array_type_len+;
 array_type_len:
-	LSQR (INT_HEX | INT_DEC | INT_OCT | INT_BIN)? RSQR;
+	LSQR length = (INT_HEX | INT_DEC | INT_OCT | INT_BIN)? RSQR;
 
 import_decl: import_from | import_stmt;
-import_stmt: IMPORT fqn (AS ident)?;
-import_from: IMPORT import_list FROM fqn;
-import_list: (import_name COMMA)* import_name (COMMA import_rest)?
-	| import_rest;
-import_rest: ASTERISK ident;
-import_name: ident (AS ident);
+import_stmt: IMPORT module = fqn (AS alt = ident)?;
+import_from: IMPORT list = import_list FROM module = fqn;
+import_list: (names += import_name COMMA)* names += import_name (
+		COMMA rest = import_rest
+	)?
+	| rest = import_rest;
+import_rest: ASTERISK name = ident;
+import_name: name = ident (AS alt = ident);
 
-fn_decl: FN fqn LPAR par_list? RPAR (RARROW type_desc)? block;
+fn_decl:
+	FN name = fqn LPAR params = par_list? RPAR (
+		RARROW ret_type = type_desc
+	)? stmts = block;
 
 block_expr: block;
 
-if_expr: IF LPAR expr RPAR expr (ELSE expr)?;
+if_expr:
+	IF LPAR cond = expr RPAR then = expr (ELSE else = expr)?;
 
-var_decl: VAR ident EQ expr;
-const_decl: INV ident EQ expr;
+var_decl: VAR name = ident EQ value = expr;
+const_decl: INV name = ident EQ value = expr;
 
 par_list: par_item | par_item ',' par_list;
 par_item: ident COLON type_desc;
 
-return_stmt: RETURN expr? SEMICOLON;
+return_stmt: RETURN value = expr? SEMICOLON;
 
-call_expr: fqn LPAR arg_list? RPAR;
+call_expr: name = fqn LPAR args = arg_list? RPAR;
 arg_list: (expr ',')* (expr | named_arg_list);
 named_arg_list: (named_arg ',')* named_arg;
 named_arg: ident COLON expr;
@@ -94,14 +98,14 @@ op4: san_expr op4_right;
 op3: san_expr op3_right;
 op2: san_expr op2_right;
 op1: san_expr op1_right;
-op0: san_expr op0_right | NOT expr;
+op0: san_expr op0_right | op = NOT expr;
 
-op6_right: expr | POW expr;
-op5_right: expr | (ASTERISK | DIV | MOD) expr;
-op4_right: expr | (ADD | SUB) expr;
-op3_right: expr | (BAND | BOR | BXOR) expr;
-op2_right: expr | (SHL | SHR) expr;
-op1_right: expr | (GT | GE | EQL | NE | LE | LT) expr;
-op0_right: expr | (AND | OR | XOR) expr;
+op6_right: expr | op = POW expr;
+op5_right: expr | op = (ASTERISK | DIV | MOD) expr;
+op4_right: expr | op = (ADD | SUB) expr;
+op3_right: expr | op = (BAND | BOR | BXOR) expr;
+op2_right: expr | op = (SHL | SHR) expr;
+op1_right: expr | op = (GT | GE | EQL | NE | LE | LT) expr;
+op0_right: expr | op = (AND | OR | XOR) expr;
 
-par: LPAR expr RPAR;
+par: LPAR expression = expr RPAR;
