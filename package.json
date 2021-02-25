@@ -7,8 +7,8 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 0",
-    "pretest": "tsc --build tsconfig.test.json",
+    "test": "mocha -u bdd --colors dist/tests",
+    "pretest": "npm run antlr && tsc --build tsconfig.test.json",
     "antlr": "antlr4ts -Xexact-output-dir -visitor -o src/generated antlr/DynastyLang.g4",
     "build": "npm run antlr && webpack",
     "start": "npm run build && node dist/index.js"
