@@ -26,17 +26,42 @@ for_stmt:
 	FOR LPAR name = ident IN iter = expr RPAR stmts = block;
 while_stmt: WHILE LPAR cond = expr RPAR stmts = block;
 
-expr: operations | san_expr;
-
-san_expr:
-	if_expr
-	| par
-	| call_expr
-	| block_expr
-	| float_lit
-	| int_lit
-	| str_lit
-	| ident;
+expr:
+	left = expr op = (
+		POW
+		| ASTERISK
+		| DIV
+		| MOD
+		| ADD
+		| SUB
+		| BAND
+		| BOR
+		| BXOR
+		| SHL
+		| SHR
+		| GT
+		| GE
+		| EQL
+		| NE
+		| LE
+		| LT
+		| AND
+		| OR
+		| XOR
+	) right = expr								# operations
+	| op = NOT right = expr						# unary_op
+	| if_expr									# expr_if
+	| par										# expr_par
+	| name = fqn LPAR args = arg_list? RPAR		# call_expr
+	| callee = expr LPAR args = arg_list? RPAR	# direct_call_expr
+	| block_expr								# expr_block
+	| float_lit									# expr_float
+	| int_lit									# expr_int
+	| str_lit									# expr_str
+	| ref_from = expr DOT accessor = ident		# member_access_expr
+	| ref_from = expr LSQR accessor = expr RSQR	# array_access_expr
+	| expr EQ expr								# assign_expr
+	| ident										# expr_ident;
 
 type_decl: TYPE name = fqn EQ desc = type_desc;
 type_desc: type_desc_san | array_type_lit;
@@ -80,7 +105,6 @@ par_item: name = ident COLON type = type_desc;
 
 return_stmt: RETURN value = expr? SEMICOLON;
 
-call_expr: name = fqn LPAR args = arg_list? RPAR;
 arg_list: (expr COMMA)* (expr | named_arg_list);
 named_arg_list: (args += named_arg COMMA)* args += named_arg;
 named_arg: name = ident COLON value = expr;
@@ -94,30 +118,5 @@ str_lit:
 		| TRIPLE_STR_LIT
 		| TRIPLE_RAW_STR_LIT
 	);
-
-operations:
-	left = san_expr op = (
-		POW
-		| ASTERISK
-		| DIV
-		| MOD
-		| ADD
-		| SUB
-		| BAND
-		| BOR
-		| BXOR
-		| SHL
-		| SHR
-		| GT
-		| GE
-		| EQL
-		| NE
-		| LE
-		| LT
-		| AND
-		| OR
-		| XOR
-	) right = expr
-	| op = NOT right = expr;
 
 par: LPAR expression = expr RPAR;
