@@ -72,6 +72,8 @@ TYPE: 'type';
 FROM: 'from';
 IMPORT: 'import';
 RETURN: 'return';
+CONTINUE: 'continue';
+BREAK: 'break';
 ELSE: 'else';
 VAR: 'var';
 INV: 'inv';
@@ -117,4 +119,6 @@ IDENT: ('a' ..'z' | 'A' ..'Z' | '_') (
 		| '_'
 	)*;
 
+COMMENT: '#' ~[\n\r]* -> channel(HIDDEN);
+BLOCK_COMMENT: '#-' .*? '-#' -> channel(HIDDEN);
 WS: [ \t\r\n\f]+ -> channel(HIDDEN);
