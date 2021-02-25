@@ -3,13 +3,13 @@ import { ParseTree } from 'antlr4ts/tree/ParseTree';
 import { RuleNode } from 'antlr4ts/tree/RuleNode';
 import {
   dnkEmpty,
-  Node,
+  AstNode,
   Operations,
   unaryOperators,
   biaryOperators,
   UnaryOperators,
   BiaryOperators,
-} from '../ast/node';
+} from '../ast/astNode';
 import {
   TopContext,
   Block_statementsContext,
@@ -57,100 +57,100 @@ import {
 } from '../generated/DynastyLangParser';
 import { DynastyLangVisitor } from '../generated/DynastyLangVisitor';
 
-type FormulaElement = Node | Operations;
+type FormulaElement = AstNode | Operations;
 
 function isOperationsContext(node: ParseTree): node is OperationsContext {
   return '_op' in node;
 }
 
 export class BuildAstVisitor
-  extends AbstractParseTreeVisitor<Node>
-  implements DynastyLangVisitor<Node> {
+  extends AbstractParseTreeVisitor<AstNode>
+  implements DynastyLangVisitor<AstNode> {
   // #region Node Transformations
-  visitTop(ctx: TopContext): Node {
+  visitTop(ctx: TopContext): AstNode {
     return {
       kind: 'dnkTop',
       children: this.aggregateChildren(ctx),
     };
   }
-  visitBlock_statements(ctx: Block_statementsContext): Node {
+  visitBlock_statements(ctx: Block_statementsContext): AstNode {
     return {
       kind: 'dnkBlock',
       children: this.aggregateChildren(ctx),
     };
   }
-  visitStmt(ctx: StmtContext): Node {
+  visitStmt(ctx: StmtContext): AstNode {
     return this.visit(ctx.getChild(0));
   }
-  visitIdent(ctx: IdentContext): Node {
+  visitIdent(ctx: IdentContext): AstNode {
     return {
       kind: 'dnkIdent',
       value: ctx._name.text,
       children: [],
     };
   }
-  visitToplevel_decl(ctx: Toplevel_declContext): Node {
+  visitToplevel_decl(ctx: Toplevel_declContext): AstNode {
     return this.visit(ctx.getChild(0));
   }
-  visitDeclaration(ctx: DeclarationContext): Node {
+  visitDeclaration(ctx: DeclarationContext): AstNode {
     return this.visit(ctx.getChild(0));
   }
-  visitBlock(ctx: BlockContext): Node {
+  visitBlock(ctx: BlockContext): AstNode {
     return this.visit(ctx.getChild(1));
   }
-  visitIf_stmt(ctx: If_stmtContext): Node {
+  visitIf_stmt(ctx: If_stmtContext): AstNode {
     return this.visit(ctx.getChild(0));
   }
-  visitFor_stmt(ctx: For_stmtContext): Node {
+  visitFor_stmt(ctx: For_stmtContext): AstNode {
     return {
       kind: 'dnkFor',
       value: [this.visit(ctx._name), this.visit(ctx._iter)],
       children: [this.visit(ctx._stmts)],
     };
   }
-  visitWhile_stmt(ctx: While_stmtContext): Node {
+  visitWhile_stmt(ctx: While_stmtContext): AstNode {
     return {
       kind: 'dnkWhile',
       value: this.visit(ctx._cond),
       children: [this.visit(ctx._stmts)],
     };
   }
-  visitExpr(ctx: ExprContext): Node {
+  visitExpr(ctx: ExprContext): AstNode {
     return this.visit(ctx.getChild(0));
   }
-  visitSan_expr(ctx: San_exprContext): Node {
+  visitSan_expr(ctx: San_exprContext): AstNode {
     return this.visit(ctx.getChild(0));
   }
-  visitType_decl(ctx: Type_declContext): Node {
+  visitType_decl(ctx: Type_declContext): AstNode {
     return {
       kind: 'dnkTypeDecl',
       value: this.visit(ctx._name),
       children: [this.visit(ctx._desc)],
     };
   }
-  visitType_desc(ctx: Type_descContext): Node {
+  visitType_desc(ctx: Type_descContext): AstNode {
     return this.visit(ctx.getChild(0));
   }
-  visitType_desc_san(ctx: Type_desc_sanContext): Node {
+  visitType_desc_san(ctx: Type_desc_sanContext): AstNode {
     return this.visit(ctx.getChild(0));
   }
-  visitType_lit(ctx: Type_litContext): Node {
+  visitType_lit(ctx: Type_litContext): AstNode {
     return {
       kind: 'dnkTypeLit',
       value: ctx._super_ && this.visit(ctx._super_),
       children: this.aggregateChildren(ctx._members),
     };
   }
-  visitMember_list(ctx: Member_listContext): Node {
+  visitMember_list(ctx: Member_listContext): AstNode {
     throw new Error('assertion error: this is unreachable code.');
   }
-  visitMember_item(ctx: Member_itemContext): Node {
+  visitMember_item(ctx: Member_itemContext): AstNode {
     return {
       kind: 'dnkTypeLit',
       children: [this.visit(ctx._name), this.visit(ctx._name)],
     };
   }
-  visitArray_type_lit(ctx: Array_type_litContext): Node {
+  visitArray_type_lit(ctx: Array_type_litContext): AstNode {
     return {
       kind: 'dnkArrayTypeLit',
       value: ctx._dims.map((it) =>
@@ -159,39 +159,39 @@ export class BuildAstVisitor
       children: [this.visit(ctx.getChild(0))],
     };
   }
-  visitImport_decl(ctx: Import_declContext): Node {
+  visitImport_decl(ctx: Import_declContext): AstNode {
     return this.visit(ctx.getChild(0));
   }
-  visitImport_stmt(ctx: Import_stmtContext): Node {
+  visitImport_stmt(ctx: Import_stmtContext): AstNode {
     return {
       kind: 'dnkImport',
       children: [this.visit(ctx._module), ctx._alt && this.visit(ctx._alt)],
     };
   }
-  visitImport_from(ctx: Import_fromContext): Node {
+  visitImport_from(ctx: Import_fromContext): AstNode {
     return {
       kind: 'dnkImportFrom',
       value: this.visit(ctx._module),
       children: this.aggregateChildren(ctx._list),
     };
   }
-  visitImport_list(ctx: Import_listContext): Node {
+  visitImport_list(ctx: Import_listContext): AstNode {
     return {
       kind: 'dnkImportList',
       value: ctx._rest && this.visit(ctx._rest._name),
       children: (ctx._names || []).map((it) => this.visit(it)),
     };
   }
-  visitImport_rest(ctx: Import_restContext): Node {
+  visitImport_rest(ctx: Import_restContext): AstNode {
     throw new Error('assertion error: this is unreachable code.');
   }
-  visitImport_name(ctx: Import_nameContext): Node {
+  visitImport_name(ctx: Import_nameContext): AstNode {
     return {
       kind: 'dnkImportName',
       children: [this.visit(ctx._name), ctx._alt && this.visit(ctx._alt)],
     };
   }
-  visitFn_decl(ctx: Fn_declContext): Node {
+  visitFn_decl(ctx: Fn_declContext): AstNode {
     return {
       kind: 'dnkFnDecl',
       value: [
@@ -202,13 +202,13 @@ export class BuildAstVisitor
       children: [this.visit(ctx._stmts)],
     };
   }
-  visitBlock_expr(ctx: Block_exprContext): Node {
+  visitBlock_expr(ctx: Block_exprContext): AstNode {
     return {
       kind: 'dnkBlockExpr',
       children: [this.visit(ctx.getChild(0))],
     };
   }
-  visitIf_expr(ctx: If_exprContext): Node {
+  visitIf_expr(ctx: If_exprContext): AstNode {
     return {
       kind: 'dnkIfExpr',
       value: this.visit(ctx._cond),
@@ -218,73 +218,73 @@ export class BuildAstVisitor
       ].flat(),
     };
   }
-  visitVar_decl(ctx: Var_declContext): Node {
+  visitVar_decl(ctx: Var_declContext): AstNode {
     return {
       kind: 'dnkVarDecl',
       children: [this.visit(ctx._name), this.visit(ctx._value)],
     };
   }
-  visitConst_decl(ctx: Const_declContext): Node {
+  visitConst_decl(ctx: Const_declContext): AstNode {
     return {
       kind: 'dnkConstDecl',
       children: [this.visit(ctx._name), this.visit(ctx._value)],
     };
   }
-  visitPar_list(ctx: Par_listContext): Node {
+  visitPar_list(ctx: Par_listContext): AstNode {
     return {
       kind: 'dnkParamList',
       children: (ctx._params || []).map((it) => this.visit(it)),
     };
   }
-  visitPar_item(ctx: Par_itemContext): Node {
+  visitPar_item(ctx: Par_itemContext): AstNode {
     return {
       kind: 'dnkParamItem',
       children: [this.visit(ctx._name), this.visit(ctx._type)],
     };
   }
-  visitReturn_stmt(ctx: Return_stmtContext): Node {
+  visitReturn_stmt(ctx: Return_stmtContext): AstNode {
     return {
       kind: 'dnkReturn',
       children: [this.visit(ctx._value)],
     };
   }
-  visitCall_expr(ctx: Call_exprContext): Node {
+  visitCall_expr(ctx: Call_exprContext): AstNode {
     return {
       kind: 'dnkCallExpr',
       value: this.visit(ctx._name),
       children: (ctx._args && this.aggregateChildren(ctx._args)) || dnkEmpty,
     };
   }
-  visitArg_list(ctx: Arg_listContext): Node {
+  visitArg_list(ctx: Arg_listContext): AstNode {
     throw new Error('assertion error: this is unreachable code.');
   }
-  visitNamed_arg_list(ctx: Named_arg_listContext): Node {
+  visitNamed_arg_list(ctx: Named_arg_listContext): AstNode {
     return {
       kind: 'dnkNamedArgList',
       children: ctx._args.map((it) => this.visit(it)),
     };
   }
-  visitNamed_arg(ctx: Named_argContext): Node {
+  visitNamed_arg(ctx: Named_argContext): AstNode {
     return {
       kind: 'dnkNamedArg',
       children: [this.visit(ctx._name), this.visit(ctx._value)],
     };
   }
-  visitFloat_lit(ctx: Float_litContext): Node {
+  visitFloat_lit(ctx: Float_litContext): AstNode {
     return {
       kind: 'dnkFloatLit',
       value: parseFloat(ctx._value.text || 'NaN'),
       children: [],
     };
   }
-  visitInt_lit(ctx: Int_litContext): Node {
+  visitInt_lit(ctx: Int_litContext): AstNode {
     return {
       kind: 'dnkIntLit',
       value: parseInt(ctx._value.text || 'NaN'),
       children: [],
     };
   }
-  visitStr_lit(ctx: Str_litContext): Node {
+  visitStr_lit(ctx: Str_litContext): AstNode {
     return {
       kind: 'dnkStrLit',
       value: [
@@ -295,14 +295,14 @@ export class BuildAstVisitor
     };
   }
 
-  visitPar(ctx: ParContext): Node {
+  visitPar(ctx: ParContext): AstNode {
     return {
       kind: 'dnkPar',
       children: [this.visit(ctx._expression)],
     };
   }
 
-  visitFqn(ctx: FqnContext): Node {
+  visitFqn(ctx: FqnContext): AstNode {
     return {
       kind: 'dnkFqn',
       value: ctx._names.map((it) => it.text),
@@ -311,7 +311,7 @@ export class BuildAstVisitor
   }
   // #endregion
 
-  visitOperations(ctx: OperationsContext): Node {
+  visitOperations(ctx: OperationsContext): AstNode {
     let formula = this.collectOperations(ctx);
     let result = this.reshakeOperations(formula);
     return result;
@@ -339,7 +339,7 @@ export class BuildAstVisitor
     return result;
   }
 
-  private reshakeOperations(formula: FormulaElement[]): Node {
+  private reshakeOperations(formula: FormulaElement[]): AstNode {
     let current = formula;
     while (current.length > 1) {
       let next: FormulaElement[] = [];
@@ -368,7 +368,7 @@ export class BuildAstVisitor
           next.push({
             kind: 'dnkOperations',
             value: element,
-            children: [current[i + 1] as Node],
+            children: [current[i + 1] as AstNode],
           });
           skipNext = true;
           continue;
@@ -399,7 +399,7 @@ export class BuildAstVisitor
           next.push({
             kind: 'dnkOperations',
             value: element,
-            children: [current[i - 1] as Node, current[i + 1] as Node],
+            children: [current[i - 1] as AstNode, current[i + 1] as AstNode],
           });
           skipNext = true;
         }
@@ -409,7 +409,7 @@ export class BuildAstVisitor
       }
       current = next;
     }
-    return current[0] as Node;
+    return current[0] as AstNode;
   }
 
   private scanMaximumOperatorPrecedence(formula: FormulaElement[]): number {
@@ -425,15 +425,15 @@ export class BuildAstVisitor
     );
   }
 
-  aggregateChildren(node: RuleNode): Node[] {
-    let result: Node[] = [];
+  aggregateChildren(node: RuleNode): AstNode[] {
+    let result: AstNode[] = [];
     for (let i = 0; i < node.childCount; i++) {
       result.push(node.getChild(i).accept(this));
     }
     return result;
   }
 
-  protected defaultResult(): Node {
+  protected defaultResult(): AstNode {
     return dnkEmpty;
   }
 }

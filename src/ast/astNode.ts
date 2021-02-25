@@ -61,22 +61,22 @@ export const biaryOperators = {
 export type UnaryOperators = keyof typeof unaryOperators;
 export type BiaryOperators = keyof typeof biaryOperators;
 export type Operations = BiaryOperators | UnaryOperators;
-export type NodeValue = Node | string | number | undefined;
+export type NodeValue = AstNode | string | number | undefined;
 
-export interface Node {
+export interface AstNode {
   kind: NodeKind;
   value?: NodeValue | NodeValue[];
-  children: Node[];
+  children: AstNode[];
 }
 
-export const dnkEmpty: Node = { kind: 'dnkEmpty', children: [] };
+export const dnkEmpty: AstNode = { kind: 'dnkEmpty', children: [] };
 
 export function dumpNodeValue(value: NodeValue | NodeValue[]): string {
   if (value instanceof Array) {
     return value.map((it) => dumpNodeValue(it)).join(', ');
   }
   if (typeof value === 'object') {
-    let node = value as Node;
+    let node = value as AstNode;
     switch (node.kind) {
       case 'dnkOperations':
         if (node.kind in unaryOperators) {
@@ -103,7 +103,7 @@ export function dumpNodeValue(value: NodeValue | NodeValue[]): string {
   return (value || '').toString();
 }
 
-export function dumpAst(node: Node, depth = 0): void {
+export function dumpAst(node: AstNode, depth = 0): void {
   let details = '';
   if (node.value) {
     details = dumpNodeValue(node.value);
