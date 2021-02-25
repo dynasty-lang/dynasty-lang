@@ -9,7 +9,7 @@
       "name": "Grammar Debugging",
       "request": "launch",
       "input": "${file}",
-      "grammar": "docs/DynastyLang.g4",
+      "grammar": "antlr/DynastyLang.g4",
       "visualParseTree": true
     }
   ]

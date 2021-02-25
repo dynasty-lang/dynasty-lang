@@ -5,7 +5,7 @@ top: (stmt | toplevel_decl)* EOF;
 block_statements: (stmt | return_stmt)*;
 stmt:
 	block
-	| expr[0] SEMICOLON
+	| expr SEMICOLON
 	| if_stmt
 	| for_stmt
 	| while_stmt
@@ -15,21 +15,24 @@ ident: name = IDENT;
 
 toplevel_decl: type_decl | import_decl;
 
-declaration: fn_decl | var_decl | const_decl;
+declaration:
+	fn_decl
+	| var_decl SEMICOLON
+	| const_decl SEMICOLON;
 
 block: LBRA block_statements RBRA;
 if_stmt: if_expr;
 for_stmt:
-	FOR LPAR name = ident IN iter = expr[0] RPAR stmts = block;
-while_stmt: WHILE LPAR cond = expr[0] RPAR stmts = block;
+	FOR LPAR name = ident IN iter = expr RPAR stmts = block;
+while_stmt: WHILE LPAR cond = expr RPAR stmts = block;
 
-expr[int priority]: san_expr | operations[$priority];
+expr: operations | san_expr;
 
 san_expr:
 	if_expr
+	| par
 	| call_expr
 	| block_expr
-	| par
 	| float_lit
 	| int_lit
 	| str_lit
@@ -65,22 +68,22 @@ fn_decl:
 block_expr: block;
 
 if_expr:
-	IF LPAR cond = expr[0] RPAR then = expr[0] (
-		ELSE else_ = expr[0]
-	)?;
+	IF LPAR cond = expr RPAR then = expr (ELSE else_ = expr)?;
 
-var_decl: VAR name = ident EQ value = expr[0];
-const_decl: INV name = ident EQ value = expr[0];
+var_decl:
+	VAR name = ident (COLON type_ = type_desc)? EQ value = expr;
+const_decl:
+	INV name = ident (COLON type_ = type_desc)? EQ value = expr;
 
 par_list: (params += par_item COMMA)* params += par_item;
 par_item: name = ident COLON type = type_desc;
 
-return_stmt: RETURN value = expr[0]? SEMICOLON;
+return_stmt: RETURN value = expr? SEMICOLON;
 
 call_expr: name = fqn LPAR args = arg_list? RPAR;
-arg_list: (expr[0] COMMA)* (expr[0] | named_arg_list);
+arg_list: (expr COMMA)* (expr | named_arg_list);
 named_arg_list: (args += named_arg COMMA)* args += named_arg;
-named_arg: name = ident COLON value = expr[0];
+named_arg: name = ident COLON value = expr;
 
 float_lit: value = (FLOAT | EXPONENTIAL);
 int_lit: value = (INT_BIN | INT_OCT | INT_DEC | INT_HEX);
@@ -92,21 +95,29 @@ str_lit:
 		| TRIPLE_RAW_STR_LIT
 	);
 
-operations[int priority]:
-	<assoc = right>san_expr op6 expr[6]
-	| <assoc = right>{6 > $priority}? san_expr op5 expr[5]
-	| <assoc = right> {5 > $priority}? san_expr op4 expr[4]
-	| <assoc = right>{4 > $priority}? san_expr op3 expr[3]
-	| <assoc = right> {3 > $priority}? san_expr op2 expr[2]
-	| <assoc = right> {2 > $priority}? san_expr op1 expr[1]
-	| <assoc = right>{1 > $priority}? san_expr op0 expr[0];
+operations:
+	left = san_expr op = (
+		POW
+		| ASTERISK
+		| DIV
+		| MOD
+		| ADD
+		| SUB
+		| BAND
+		| BOR
+		| BXOR
+		| SHL
+		| SHR
+		| GT
+		| GE
+		| EQL
+		| NE
+		| LE
+		| LT
+		| AND
+		| OR
+		| XOR
+	) right = expr
+	| op = NOT right = expr;
 
-op6: op = POW;
-op5: op = (ASTERISK | DIV | MOD);
-op4: op = (ADD | SUB);
-op3: op = (BAND | BOR | BXOR);
-op2: op = (SHL | SHR);
-op1: op = (GT | GE | EQL | NE | LE | LT);
-op0: op = (AND | OR | XOR);
-
-par: LPAR expression = expr[0] RPAR;
+par: LPAR expression = expr RPAR;
