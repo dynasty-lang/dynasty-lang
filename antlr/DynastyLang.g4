@@ -2,7 +2,12 @@ grammar DynastyLang;
 import DynastyCommonRuleSet;
 
 top: (stmt | toplevel_decl)* EOF;
-block_statements: (stmt | return_stmt)*;
+block_statements: (
+		stmt
+		| return_stmt
+		| continue_stmt
+		| break_stmt
+	)*;
 stmt:
 	block
 	| expr SEMICOLON
@@ -104,7 +109,8 @@ par_list: (params += par_item COMMA)* params += par_item;
 par_item: name = ident COLON type = type_desc;
 
 return_stmt: RETURN value = expr? SEMICOLON;
-
+continue_stmt: CONTINUE SEMICOLON;
+break_stmt: BREAK SEMICOLON;
 arg_list: (expr COMMA)* (expr | named_arg_list);
 named_arg_list: (args += named_arg COMMA)* args += named_arg;
 named_arg: name = ident COLON value = expr;

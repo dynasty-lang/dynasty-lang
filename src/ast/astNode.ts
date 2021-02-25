@@ -21,6 +21,8 @@ export type NodeKind =
   | 'dnkParamList'
   | 'dnkParamItem'
   | 'dnkReturn'
+  | 'dnkBreak'
+  | 'dnkContinue'
   | 'dnkCallExpr'
   | 'dnkArgList'
   | 'dnkNamedArg'

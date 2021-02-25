@@ -72,6 +72,8 @@ TYPE: 'type';
 FROM: 'from';
 IMPORT: 'import';
 RETURN: 'return';
+CONTINUE: 'continue';
+BREAK: 'break';
 ELSE: 'else';
 VAR: 'var';
 INV: 'inv';
