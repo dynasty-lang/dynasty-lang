@@ -119,4 +119,6 @@ IDENT: ('a' ..'z' | 'A' ..'Z' | '_') (
 		| '_'
 	)*;
 
+COMMENT: '#' ~[\n\r]* -> channel(HIDDEN);
+BLOCK_COMMENT: '#-' .*? '-#' -> channel(HIDDEN);
 WS: [ \t\r\n\f]+ -> channel(HIDDEN);
