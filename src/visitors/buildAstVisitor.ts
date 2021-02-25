@@ -310,7 +310,8 @@ export class BuildAstVisitor
     const assignee = this.visit(ctx._assignee);
     if (
       assignee.kind !== 'dnkArrayAccessOp' &&
-      assignee.kind !== 'dnkMemberAccessOp'
+      assignee.kind !== 'dnkMemberAccessOp' &&
+      assignee.kind !== 'dnkIdent'
     ) {
       throw new Error(
         `syntax error:malformed tree:'${assignee.kind}' is not assignable.`
