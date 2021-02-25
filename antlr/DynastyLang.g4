@@ -9,13 +9,16 @@ stmt:
 	| if_stmt
 	| for_stmt
 	| while_stmt
-	| declaration SEMICOLON;
+	| declaration;
 
 ident: name = IDENT;
 
 toplevel_decl: type_decl | import_decl;
 
-declaration: fn_decl | var_decl | const_decl;
+declaration:
+	fn_decl
+	| var_decl SEMICOLON
+	| const_decl SEMICOLON;
 
 block: LBRA block_statements RBRA;
 if_stmt: if_expr;
