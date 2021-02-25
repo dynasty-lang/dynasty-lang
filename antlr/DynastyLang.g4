@@ -9,7 +9,7 @@ stmt:
 	| if_stmt
 	| for_stmt
 	| while_stmt
-	| declaration;
+	| declaration SEMICOLON;
 
 ident: name = IDENT;
 
