@@ -7,7 +7,6 @@ import {
   Operations,
   unaryOperators,
   biaryOperators,
-  UnaryOperators,
   BiaryOperators,
 } from '../ast/astNode';
 import {
@@ -21,8 +20,6 @@ import {
   If_stmtContext,
   For_stmtContext,
   While_stmtContext,
-  ExprContext,
-  San_exprContext,
   Type_declContext,
   Type_descContext,
   Type_desc_sanContext,
@@ -54,6 +51,19 @@ import {
   OperationsContext,
   ParContext,
   FqnContext,
+  Array_access_exprContext,
+  Array_type_lenContext,
+  Assign_exprContext,
+  Direct_call_exprContext,
+  Expr_blockContext,
+  Expr_floatContext,
+  Expr_identContext,
+  Expr_ifContext,
+  Expr_intContext,
+  Expr_parContext,
+  Expr_strContext,
+  Member_access_exprContext,
+  Unary_opContext,
 } from '../generated/DynastyLangParser';
 import { DynastyLangVisitor } from '../generated/DynastyLangVisitor';
 
@@ -114,12 +124,6 @@ export class BuildAstVisitor
       value: this.visit(ctx._cond),
       children: [this.visit(ctx._stmts)],
     };
-  }
-  visitExpr(ctx: ExprContext): AstNode {
-    return this.visit(ctx.getChild(0));
-  }
-  visitSan_expr(ctx: San_exprContext): AstNode {
-    return this.visit(ctx.getChild(0));
   }
   visitType_decl(ctx: Type_declContext): AstNode {
     return {
@@ -221,12 +225,14 @@ export class BuildAstVisitor
   visitVar_decl(ctx: Var_declContext): AstNode {
     return {
       kind: 'dnkVarDecl',
+      value: (ctx._type_ && this.visit(ctx._type_)) || dnkEmpty,
       children: [this.visit(ctx._name), this.visit(ctx._value)],
     };
   }
   visitConst_decl(ctx: Const_declContext): AstNode {
     return {
       kind: 'dnkConstDecl',
+      value: (ctx._type_ && this.visit(ctx._type_)) || dnkEmpty,
       children: [this.visit(ctx._name), this.visit(ctx._value)],
     };
   }
@@ -308,6 +314,73 @@ export class BuildAstVisitor
       value: ctx._names.map((it) => it.text),
       children: [],
     };
+  }
+
+  visitUnary_op(ctx: Unary_opContext): AstNode {
+    return {
+      kind: 'dnkOperations',
+      value: ctx._op.text || dnkEmpty,
+      children: [this.visit(ctx._right)],
+    };
+  }
+
+  visitExpr_if(ctx: Expr_ifContext): AstNode {
+    return this.visit(ctx.getChild(0));
+  }
+  visitExpr_par(ctx: Expr_parContext): AstNode {
+    return this.visit(ctx.getChild(0));
+  }
+  visitDirect_call_expr(ctx: Direct_call_exprContext): AstNode {
+    return {
+      kind: 'dnkCallExpr',
+      value: this.visit(ctx._callee),
+      children: (ctx._args && this.aggregateChildren(ctx._args)) || dnkEmpty,
+    };
+  }
+  visitExpr_block(ctx: Expr_blockContext): AstNode {
+    return this.visit(ctx.getChild(0));
+  }
+  visitExpr_float(ctx: Expr_floatContext): AstNode {
+    return this.visit(ctx.getChild(0));
+  }
+  visitExpr_int(ctx: Expr_intContext): AstNode {
+    return this.visit(ctx.getChild(0));
+  }
+  visitExpr_str(ctx: Expr_strContext): AstNode {
+    return this.visit(ctx.getChild(0));
+  }
+  visitMember_access_expr(ctx: Member_access_exprContext): AstNode {
+    return {
+      kind: 'dnkMemberAccessOp',
+      children: [this.visit(ctx._ref_from), this.visit(ctx._accessor)],
+    };
+  }
+  visitArray_access_expr(ctx: Array_access_exprContext): AstNode {
+    return {
+      kind: 'dnkArrayAccessOp',
+      children: [this.visit(ctx._ref_from), this.visit(ctx._accessor)],
+    };
+  }
+  visitAssign_expr(ctx: Assign_exprContext): AstNode {
+    const assignee = this.visit(ctx._assignee);
+    if (
+      assignee.kind !== 'dnkArrayAccessOp' &&
+      assignee.kind !== 'dnkMemberAccessOp'
+    ) {
+      throw new Error(
+        `syntax error:malformed tree:'${assignee.kind}' is not assignable.`
+      );
+    }
+    return {
+      kind: 'dnkAssignOp',
+      children: [assignee, this.visit(ctx._assigner)],
+    };
+  }
+  visitExpr_ident(ctx: Expr_identContext): AstNode {
+    return this.visit(ctx.getChild(0));
+  }
+  visitArray_type_len(ctx: Array_type_lenContext): AstNode {
+    throw new Error('assertion error: this is unreachable code.');
   }
   // #endregion
 

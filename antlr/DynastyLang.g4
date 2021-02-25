@@ -60,7 +60,7 @@ expr:
 	| str_lit									# expr_str
 	| ref_from = expr DOT accessor = ident		# member_access_expr
 	| ref_from = expr LSQR accessor = expr RSQR	# array_access_expr
-	| expr EQ expr								# assign_expr
+	| assignee = expr EQ assigner = expr		# assign_expr
 	| ident										# expr_ident;
 
 type_decl: TYPE name = fqn EQ desc = type_desc;
