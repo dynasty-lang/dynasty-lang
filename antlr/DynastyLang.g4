@@ -70,8 +70,10 @@ block_expr: block;
 if_expr:
 	IF LPAR cond = expr RPAR then = expr (ELSE else_ = expr)?;
 
-var_decl: VAR name = ident EQ value = expr;
-const_decl: INV name = ident EQ value = expr;
+var_decl:
+	VAR name = ident (COLON type_ = type_desc)? EQ value = expr;
+const_decl:
+	INV name = ident (COLON type_ = type_desc)? EQ value = expr;
 
 par_list: (params += par_item COMMA)* params += par_item;
 par_item: name = ident COLON type = type_desc;
