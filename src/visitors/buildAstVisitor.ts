@@ -210,7 +210,7 @@ export class BuildAstVisitor
     return {
       kind: 'dnkCallExpr',
       value: this.visit(ctx._name),
-      children: (ctx._args && this.aggregateChildren(ctx._args)) || dnkEmpty,
+      children: (ctx._args && this.collectArgList(ctx._args)) || dnkEmpty,
     };
   }
   visitArg_list(ctx: lang.Arg_listContext): AstNode {
@@ -502,7 +502,15 @@ export class BuildAstVisitor
     );
   }
 
-  aggregateChildren(node: RuleNode): AstNode[] {
+  private collectArgList(ctx: lang.Arg_listContext): AstNode[] {
+    return ctx._args
+      .map((it) => this.visit(it))
+      .concat(
+        (ctx._named_args || { _args: [] })._args.map((it) => this.visit(it))
+      );
+  }
+
+  private aggregateChildren(node: RuleNode): AstNode[] {
     let result: AstNode[] = [];
     for (let i = 0; i < node.childCount; i++) {
       result.push(node.getChild(i).accept(this));
