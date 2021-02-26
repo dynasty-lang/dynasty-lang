@@ -120,6 +120,14 @@ export function dumpNodeValue(value: NodeValue | NodeValue[]): string {
         )}`;
       case 'dnkEmpty':
         return '';
+      case 'dnkCallExpr':
+        return `${dumpNodeValue(node.value)}(${node.children
+          .map(dumpNodeValue)
+          .join(', ')})`;
+      case 'dnkNamedArg':
+        return `${dumpNodeValue(node.children[0])}: ${dumpNodeValue(
+          node.children[1]
+        )}`;
       default:
         return `<Node: ${node.kind}>`;
     }
