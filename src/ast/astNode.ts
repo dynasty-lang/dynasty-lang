@@ -30,6 +30,8 @@ export type NodeKind =
   | 'dnkFloatLit'
   | 'dnkIntLit'
   | 'dnkStrLit'
+  | 'dnkObjectLit'
+  | 'dnkArrayLit'
   | 'dnkOperations'
   | 'dnkMemberAccessOp'
   | 'dnkArrayAccessOp'
@@ -41,26 +43,27 @@ export type NodeKind =
 
 export const unaryOperators = { not: 1 };
 export const biaryOperators = {
-  '**': 6,
-  '*': 5,
-  '/': 5,
-  mod: 5,
-  '+': 4,
-  '-': 4,
-  '&': 3,
-  '|': 3,
-  '^': 3,
-  '<<': 2,
-  '>>': 2,
-  '>': 1,
-  '>=': 1,
-  '==': 1,
-  '!=': 1,
-  '<=': 1,
-  '<': 1,
-  and: 0,
-  or: 0,
-  xor: 0,
+  '**': 7,
+  '*': 6,
+  '/': 6,
+  mod: 6,
+  '+': 5,
+  '-': 5,
+  '&': 4,
+  '|': 4,
+  '^': 4,
+  '<<': 3,
+  '>>': 3,
+  '>': 2,
+  '>=': 2,
+  '==': 2,
+  '!=': 2,
+  '<=': 2,
+  '<': 2,
+  and: 1,
+  or: 1,
+  xor: 1,
+  '=': 0,
 };
 
 export type UnaryOperators = keyof typeof unaryOperators;
@@ -84,6 +87,7 @@ export function dumpNodeValue(value: NodeValue | NodeValue[]): string {
     let node = value as AstNode;
     switch (node.kind) {
       case 'dnkOperations':
+      case 'dnkAssignOp':
         if (node.kind in unaryOperators) {
           return `${node.value} ${dumpNodeValue(node.children[0])}`;
         }
@@ -100,6 +104,22 @@ export function dumpNodeValue(value: NodeValue | NodeValue[]): string {
         return (node.value as number).toString();
       case 'dnkStrLit':
         return JSON.stringify(node.value as string);
+      case 'dnkArrayAccessOp':
+        return `${dumpNodeValue(node.children[0])}[${dumpNodeValue(
+          node.children[1]
+        )}]`;
+      case 'dnkArrayTypeLit':
+        return `${dumpNodeValue(
+          node.children[0]
+        )}${(node.value as AstNode[]).map((it) => `[${dumpNodeValue(it)}]`)}`;
+      case 'dnkParamList':
+        return `(${node.children.map(dumpNodeValue).join()})`;
+      case 'dnkParamItem':
+        return `${dumpNodeValue(node.children[0])}: ${dumpNodeValue(
+          node.children[1]
+        )}`;
+      case 'dnkEmpty':
+        return '';
       default:
         return `<Node: ${node.kind}>`;
     }
