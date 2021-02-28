@@ -23,6 +23,7 @@ export class BuildAstVisitor
   implements DynastyLangVisitor<AstNode> {
   // #region Node Transformations
   visitTop(ctx: lang.TopContext): AstNode {
+    ctx.children!.pop();
     return {
       kind: 'dnkTop',
       children: this.aggregateChildren(ctx),
@@ -102,8 +103,8 @@ export class BuildAstVisitor
   visitArray_type_lit(ctx: lang.Array_type_litContext): AstNode {
     return {
       kind: 'dnkArrayTypeLit',
-      value: ctx._dims.map((it) =>
-        parseInt((it._length || { text: '-1' }).text || '-1')
+      value: ctx._dims.map(
+        (it) => (it._length && this.visit(it._length)) || dnkEmpty
       ),
       children: [this.visit(ctx.getChild(0))],
     };
@@ -171,14 +172,20 @@ export class BuildAstVisitor
     return {
       kind: 'dnkVarDecl',
       value: (ctx._type_ && this.visit(ctx._type_)) || dnkEmpty,
-      children: [this.visit(ctx._name), this.visit(ctx._value)],
+      children: [
+        this.visit(ctx._name),
+        (ctx._value && this.visit(ctx._value)) || dnkEmpty,
+      ],
     };
   }
   visitConst_decl(ctx: lang.Const_declContext): AstNode {
     return {
       kind: 'dnkConstDecl',
       value: (ctx._type_ && this.visit(ctx._type_)) || dnkEmpty,
-      children: [this.visit(ctx._name), this.visit(ctx._value)],
+      children: [
+        this.visit(ctx._name),
+        (ctx._value && this.visit(ctx._value)) || dnkEmpty,
+      ],
     };
   }
   visitPar_list(ctx: lang.Par_listContext): AstNode {
@@ -203,7 +210,7 @@ export class BuildAstVisitor
     return {
       kind: 'dnkCallExpr',
       value: this.visit(ctx._name),
-      children: (ctx._args && this.aggregateChildren(ctx._args)) || dnkEmpty,
+      children: (ctx._args && this.collectArgList(ctx._args)) || dnkEmpty,
     };
   }
   visitArg_list(ctx: lang.Arg_listContext): AstNode {
@@ -306,27 +313,17 @@ export class BuildAstVisitor
       children: [this.visit(ctx._ref_from), this.visit(ctx._accessor)],
     };
   }
-  visitAssign_expr(ctx: lang.Assign_exprContext): AstNode {
-    const assignee = this.visit(ctx._assignee);
-    if (
-      assignee.kind !== 'dnkArrayAccessOp' &&
-      assignee.kind !== 'dnkMemberAccessOp' &&
-      assignee.kind !== 'dnkIdent'
-    ) {
-      throw new Error(
-        `syntax error:malformed tree:'${assignee.kind}' is not assignable.`
-      );
-    }
-    return {
-      kind: 'dnkAssignOp',
-      children: [assignee, this.visit(ctx._assigner)],
-    };
-  }
   visitExpr_ident(ctx: lang.Expr_identContext): AstNode {
     return this.visit(ctx.getChild(0));
   }
   visitArray_type_len(ctx: lang.Array_type_lenContext): AstNode {
     throw new Error('assertion error: this is unreachable code.');
+  }
+  visitExpr_array(ctx: lang.Expr_arrayContext): AstNode {
+    return this.visit(ctx.getChild(0));
+  }
+  visitExpr_object(ctx: lang.Expr_objectContext): AstNode {
+    return this.visit(ctx.getChild(0));
   }
 
   visitContinue_stmt(ctx: lang.Continue_stmtContext): AstNode {
@@ -342,6 +339,28 @@ export class BuildAstVisitor
       children: [],
     };
   }
+
+  visitArray_lit(ctx: lang.Array_litContext): AstNode {
+    return {
+      kind: 'dnkArrayLit',
+      children: ctx._items.map((it) => this.visit(it)),
+    };
+  }
+
+  visitObj_lit(ctx: lang.Obj_litContext): AstNode {
+    return {
+      kind: 'dnkArrayLit',
+      children: ctx._items.map((it) => this.visit(it)),
+    };
+  }
+
+  visitObj_member(ctx: lang.Obj_memberContext): AstNode {
+    return {
+      kind: 'dnkObjectLit',
+      value: ctx._key.text,
+      children: [this.visit(ctx._value)],
+    };
+  }
   // #endregion
 
   visitOperations(ctx: lang.OperationsContext): AstNode {
@@ -355,12 +374,16 @@ export class BuildAstVisitor
     let result: FormulaElement[] = [];
     while (true) {
       if (context._left) {
-        result.push(this.visit(context._left));
+        if (isOperationsContext(context._left)) {
+          result = result.concat(this.collectOperations(context._left));
+        } else {
+          result.push(this.visit(context._left));
+        }
       }
 
       result.push(context._op.text as Operations);
 
-      let node = context._right.getChild(0);
+      let node = context._right;
 
       if (!isOperationsContext(node)) {
         result.push(this.visit(node));
@@ -427,14 +450,35 @@ export class BuildAstVisitor
                 .join(' ')}"`
             );
           }
-
           next.pop();
-          next.push({
-            kind: 'dnkOperations',
-            value: element,
-            children: [current[i - 1] as AstNode, current[i + 1] as AstNode],
-          });
           skipNext = true;
+
+          if (element !== '=') {
+            next.push({
+              kind: 'dnkOperations',
+              value: element,
+              children: [current[i - 1] as AstNode, current[i + 1] as AstNode],
+            });
+            continue;
+          }
+
+          // #region Handle Assignation
+          const assignee = current[i - 1] as AstNode;
+          if (
+            assignee.kind !== 'dnkArrayAccessOp' &&
+            assignee.kind !== 'dnkMemberAccessOp' &&
+            assignee.kind !== 'dnkIdent'
+          ) {
+            throw new Error(
+              `syntax error:malformed tree:'${assignee.kind}' is not assignable.`
+            );
+          }
+          next.push({
+            kind: 'dnkAssignOp',
+            value: element,
+            children: [assignee, current[i + 1] as AstNode],
+          });
+          // #endregion
         }
       }
       if (next.length != 1 && current.length == next.length) {
@@ -458,7 +502,15 @@ export class BuildAstVisitor
     );
   }
 
-  aggregateChildren(node: RuleNode): AstNode[] {
+  private collectArgList(ctx: lang.Arg_listContext): AstNode[] {
+    return ctx._args
+      .map((it) => this.visit(it))
+      .concat(
+        (ctx._named_args || { _args: [] })._args.map((it) => this.visit(it))
+      );
+  }
+
+  private aggregateChildren(node: RuleNode): AstNode[] {
     let result: AstNode[] = [];
     for (let i = 0; i < node.childCount; i++) {
       result.push(node.getChild(i).accept(this));
