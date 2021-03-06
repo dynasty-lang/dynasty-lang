@@ -9,13 +9,22 @@ export type {
   DnkArrayAccessOp,
   DnkArrayLit,
   DnkArrayTypeLit,
+  DnkAssignOp,
+  DnkBlock,
   DnkBlockExpr,
+  DnkBreak,
   DnkCallExpr,
+  DnkConstDecl,
+  DnkContinue,
   DnkEmpty,
   DnkFloatLit,
+  DnkFnDecl,
+  DnkFor,
   DnkFqn,
   DnkIdent,
   DnkIfExpr,
+  DnkImport,
+  DnkImportFrom,
   DnkImportList,
   DnkImportName,
   DnkIntLit,
@@ -28,8 +37,14 @@ export type {
   DnkPar,
   DnkParamItem,
   DnkParamList,
+  DnkReturn,
   DnkStrLit,
+  DnkTop,
+  DnkTypeDecl,
   DnkTypeLit,
+  DnkVarDecl,
+  DnkWhile,
+  DnkYield,
   ExpressionNode,
   Operations,
   TypeDescriptorNode,
@@ -73,9 +88,9 @@ export function dumpNodeValue(
       case 'dnkIdent':
         return node.value as string;
       case 'dnkIntLit':
-        return (node.value as number).toString();
+        return `${node.value[1]}i${node.value[0] || '32'}`;
       case 'dnkFloatLit':
-        return (node.value as number).toString();
+        return `${node.value[1]}${node.value[0] == '64' ? 'd' : 'f'}`;
       case 'dnkStrLit':
         return `${node.value[1] == 'r' ? 'r' : ''}"${node.value[1]}"`;
       case 'dnkArrayAccessOp':
