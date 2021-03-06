@@ -36,13 +36,24 @@ export type {
   UnaryOperators,
 } from './nodeKind';
 
-export type NodeKind = AstNode['kind'];
+export type DynastyNodeKind = AstNode['kind'];
 
 export type NodeValue = AstNode | string | number | undefined;
 
 export const dnkEmpty: DnkEmpty = { kind: 'dnkEmpty', children: [] };
 
-export function dumpNodeValue(value: NodeValue | NodeValue[]): string {
+export function dumpNodeValue(
+  value: NodeValue | NodeValue[],
+  literal?: 'str' | 'number'
+): string {
+  if (literal === 'str') {
+    if (!(value instanceof Array)) {
+      throw new Error('assertion error');
+    }
+    return `${value[1] == 'r' ? 'r' : ''}"${value[1]}"`;
+  } else if (literal === 'number') {
+    return (value || 'NaN').toString();
+  }
   if (value instanceof Array) {
     return value.map((it) => dumpNodeValue(it)).join(', ');
   }
@@ -77,7 +88,7 @@ export function dumpNodeValue(value: NodeValue | NodeValue[]): string {
           : []
         ).map((it: any) => `[${dumpNodeValue(it)}]`)}`;
       case 'dnkParamList':
-        return `(${node.children.map(dumpNodeValue).join()})`;
+        return `(${node.children.map((it) => dumpNodeValue(it)).join()})`;
       case 'dnkParamItem':
         return `${dumpNodeValue(node.children[0])}: ${dumpNodeValue(
           node.children[1]
@@ -86,7 +97,7 @@ export function dumpNodeValue(value: NodeValue | NodeValue[]): string {
         return '';
       case 'dnkCallExpr':
         return `${dumpNodeValue(node.value)}(${node.children
-          .map(dumpNodeValue)
+          .map((it) => dumpNodeValue(it))
           .join(', ')})`;
       case 'dnkNamedArg':
         return `${dumpNodeValue(node.children[0])}: ${dumpNodeValue(
@@ -103,7 +114,10 @@ export function dumpNodeValue(value: NodeValue | NodeValue[]): string {
 export function dumpAst(node: AstNode, depth = 0): void {
   let details = '';
   if ('value' in node) {
-    details = dumpNodeValue(node.value);
+    details = dumpNodeValue(
+      node.value,
+      node.kind === 'dnkStrLit' ? 'str' : undefined
+    );
   }
   console.log(`${'  '.repeat(depth)}${node.kind} ${details || ''}`);
   node.children.forEach((it: any) => {
