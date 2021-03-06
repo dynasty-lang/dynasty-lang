@@ -28,95 +28,55 @@ export const biaryOperators = {
 };
 
 export type UnaryOperators = keyof typeof unaryOperators;
-
 export type BiaryOperators = keyof typeof biaryOperators;
-
 export type AssignOperators = keyof typeof assignOperators;
-
 export type Operations = BiaryOperators | UnaryOperators | AssignOperators;
 
-export type DnkIdent = { kind: 'dnkIdent'; value: string; children: [] };
+export type DnkTop = { kind: 'dnkTop'; children: AstNode[] };
+export type DnkBlock = { kind: 'dnkBlock'; children: AstNode[] };
 
-export type DnkFqn = { kind: 'dnkFqn'; value: string[]; children: [] };
-
-export type DnkMemberItem = {
-  kind: 'dnkMemberItem';
+export type DnkConstDecl = {
+  kind: 'dnkConstDecl';
+  value: TypeDescriptorNode | DnkEmpty;
+  children: [DnkIdent, ExpressionNode | DnkEmpty];
+};
+export type DnkFnDecl = {
+  kind: 'dnkFnDecl';
+  value: [DnkFqn, DnkParamList | DnkEmpty, TypeDescriptorNode | DnkEmpty];
+  children: AstNode[];
+};
+export type DnkParamList = { kind: 'dnkParamList'; children: DnkParamItem[] };
+export type DnkParamItem = {
+  kind: 'dnkParamItem';
   children: [DnkIdent, TypeDescriptorNode];
 };
-
-export type DnkEmpty = { kind: 'dnkEmpty'; children: [] };
-
+export type DnkImport = {
+  kind: 'dnkImport';
+  children: [DnkFqn, DnkIdent | undefined];
+};
+export type DnkImportFrom = {
+  kind: 'dnkImportFrom';
+  value: DnkFqn;
+  children: [DnkImportList];
+};
 export type DnkImportList = {
   kind: 'dnkImportList';
   value: DnkIdent | DnkEmpty;
   children: DnkImportName[];
 };
-
 export type DnkImportName = {
   kind: 'dnkImportName';
   children: [DnkIdent, DnkIdent | undefined];
 };
-
-export type DnkParamList = {
-  kind: 'dnkParamList';
-  children: DnkParamItem[];
-};
-
-export type DnkParamItem = {
-  kind: 'dnkParamItem';
-  children: [DnkIdent, AstNode];
-};
-
-export type DnkArgList = {
-  kind: 'dnkArgList';
-  children: (ExpressionNode | DnkNamedArg)[];
-};
-
-export type DnkNamedArg = {
-  kind: 'dnkNamedArg';
-  children: [DnkIdent, ExpressionNode];
-};
-
-export type DnkObjectLitMember = {
-  kind: 'dnkObjectLitMember';
-  value: string;
-  children: [ExpressionNode];
-};
-
-export type DnkCallExpr = {
-  kind: 'dnkCallExpr';
-  value: ExpressionNode | DnkFqn;
-  children: (ExpressionNode | DnkNamedArg)[];
-};
-export type DnkBlockExpr = { kind: 'dnkBlockExpr'; children: [AstNode] };
-
-export type DnkIfExpr = {
-  kind: 'dnkIfExpr';
-  value: ExpressionNode;
-  children: [ExpressionNode, ExpressionNode | undefined];
-};
-
-export type DnkFloatLit = { kind: 'dnkFloatLit'; value: number; children: [] };
-
-export type DnkIntLit = { kind: 'dnkIntLit'; value: number; children: [] };
-
-export type DnkStrLit = {
-  kind: 'dnkStrLit';
-  value: ['r' | 's', string];
-  children: [];
-};
-
-export type DnkObjectLit = {
-  kind: 'dnkObjectLit';
-  children: DnkObjectLitMember[];
-};
-
-export type DnkArrayLit = { kind: 'dnkArrayLit'; children: ExpressionNode[] };
-
-export type DnkArrayTypeLit = {
-  kind: 'dnkArrayTypeLit';
-  value: AstNode[];
+export type DnkTypeDecl = {
+  kind: 'dnkTypeDecl';
+  value: DnkIdent;
   children: [TypeDescriptorNode];
+};
+export type DnkVarDecl = {
+  kind: 'dnkVarDecl';
+  value: TypeDescriptorNode | DnkEmpty;
+  children: [DnkIdent, ExpressionNode | DnkEmpty];
 };
 
 export type DnkTypeLit = {
@@ -124,24 +84,101 @@ export type DnkTypeLit = {
   value: DnkFqn | DnkEmpty;
   children: DnkMemberItem[];
 };
-
-export type DnkOperations = {
-  kind: 'dnkOperations';
-  value: Operations | DnkEmpty;
-  children: [ExpressionNode, ExpressionNode | undefined];
+export type DnkMemberItem = {
+  kind: 'dnkMemberItem';
+  children: [DnkIdent, TypeDescriptorNode];
+};
+export type DnkArrayTypeLit = {
+  kind: 'dnkArrayTypeLit';
+  value: AstNode[];
+  children: [TypeDescriptorNode];
 };
 
-export type DnkMemberAccessOp = {
-  kind: 'dnkMemberAccessOp';
-  children: [ExpressionNode, DnkIdent];
-};
+export type DnkFqn = { kind: 'dnkFqn'; value: string[]; children: [] };
+export type DnkIdent = { kind: 'dnkIdent'; value: string; children: [] };
 
 export type DnkArrayAccessOp = {
   kind: 'dnkArrayAccessOp';
   children: [ExpressionNode, ExpressionNode];
 };
-
+export type DnkAssignOp = {
+  kind: 'dnkAssignOp';
+  value: AssignOperators;
+  children: [AstNode, AstNode];
+};
+export type DnkBlockExpr = { kind: 'dnkBlockExpr'; children: [DnkBlock] };
+export type DnkCallExpr = {
+  kind: 'dnkCallExpr';
+  value: ExpressionNode | DnkFqn;
+  children: (ExpressionNode | DnkNamedArg)[];
+};
+export type DnkArgList = {
+  kind: 'dnkArgList';
+  children: (ExpressionNode | DnkNamedArg)[];
+};
+export type DnkNamedArg = {
+  kind: 'dnkNamedArg';
+  children: [DnkIdent, ExpressionNode];
+};
+export type DnkMemberAccessOp = {
+  kind: 'dnkMemberAccessOp';
+  children: [ExpressionNode, DnkIdent];
+};
+export type DnkOperations = {
+  kind: 'dnkOperations';
+  value: Operations | DnkEmpty;
+  children: [ExpressionNode, ExpressionNode | undefined];
+};
 export type DnkPar = { kind: 'dnkPar'; children: [ExpressionNode] };
+
+export type DnkArrayLit = { kind: 'dnkArrayLit'; children: ExpressionNode[] };
+export type DnkFloatLit = {
+  kind: 'dnkFloatLit';
+  value: ['32' | '64' | '', number];
+  children: [];
+};
+export type DnkIntLit = {
+  kind: 'dnkIntLit';
+  value: ['8' | '16' | '32' | '64' | '', number];
+  children: [];
+};
+export type DnkObjectLit = {
+  kind: 'dnkObjectLit';
+  children: DnkObjectLitMember[];
+};
+export type DnkObjectLitMember = {
+  kind: 'dnkObjectLitMember';
+  value: string;
+  children: [ExpressionNode];
+};
+export type DnkStrLit = {
+  kind: 'dnkStrLit';
+  value: ['r' | 's', string];
+  children: [];
+};
+
+export type DnkFor = {
+  kind: 'dnkFor';
+  value: [DnkIdent, ExpressionNode];
+  children: [AstNode];
+};
+export type DnkIfExpr = {
+  kind: 'dnkIfExpr';
+  value: ExpressionNode;
+  children: [ExpressionNode, ExpressionNode | undefined];
+};
+export type DnkWhile = {
+  kind: 'dnkWhile';
+  value: ExpressionNode;
+  children: [AstNode];
+};
+
+export type DnkBreak = { kind: 'dnkBreak'; children: [] };
+export type DnkContinue = { kind: 'dnkContinue'; children: [] };
+export type DnkReturn = { kind: 'dnkReturn'; children: [AstNode] };
+export type DnkYield = { kind: 'dnkYield'; children: [AstNode] };
+
+export type DnkEmpty = { kind: 'dnkEmpty'; children: [] };
 
 export type ExpressionNode =
   | DnkIdent
@@ -165,42 +202,26 @@ export type TypeDescriptorNode = DnkFqn | DnkTypeLit | DnkArrayTypeLit;
 export type AstNode =
   | TypeDescriptorNode
   | ExpressionNode
-  | { kind: 'dnkTop'; children: AstNode[] }
-  | { kind: 'dnkBlock'; children: AstNode[] }
-  | { kind: 'dnkFor'; value: [DnkIdent, ExpressionNode]; children: [AstNode] }
-  | { kind: 'dnkWhile'; value: ExpressionNode; children: [AstNode] }
-  | { kind: 'dnkTypeDecl'; value: DnkIdent; children: [TypeDescriptorNode] }
+  | DnkTop
+  | DnkBlock
+  | DnkFor
+  | DnkWhile
+  | DnkTypeDecl
   | DnkMemberItem
-  | { kind: 'dnkImport'; children: [DnkFqn, DnkIdent | undefined] }
-  | { kind: 'dnkImportFrom'; value: DnkFqn; children: [DnkImportList] }
+  | DnkImport
+  | DnkImportFrom
   | DnkImportList
   | DnkImportName
-  | {
-      kind: 'dnkFnDecl';
-      value: [DnkFqn, DnkParamList | DnkEmpty, AstNode];
-      children: AstNode[];
-    }
+  | DnkFnDecl
   | DnkParamList
   | DnkParamItem
-  | {
-      kind: 'dnkVarDecl';
-      value: AstNode | DnkEmpty;
-      children: [DnkIdent, AstNode | DnkEmpty];
-    }
-  | {
-      kind: 'dnkConstDecl';
-      value: AstNode | DnkEmpty;
-      children: [DnkIdent, AstNode | DnkEmpty];
-    }
-  | { kind: 'dnkReturn'; children: [AstNode] }
-  | { kind: 'dnkYield'; children: [AstNode] }
-  | { kind: 'dnkBreak'; children: [] }
-  | { kind: 'dnkContinue'; children: [] }
+  | DnkVarDecl
+  | DnkConstDecl
+  | DnkReturn
+  | DnkYield
+  | DnkBreak
+  | DnkContinue
   | DnkArgList
   | DnkNamedArg
   | DnkObjectLitMember
-  | {
-      kind: 'dnkAssignOp';
-      value: AssignOperators;
-      children: [AstNode, AstNode];
-    };
+  | DnkAssignOp;
