@@ -8,7 +8,7 @@ import {
   unaryOperators,
   biaryOperators,
   BiaryOperators,
-  AssignOperators,
+  DnkBlock,
   DnkFqn,
   DnkIdent,
   TypeDescriptorNode,
@@ -188,7 +188,7 @@ export class BuildAstVisitor
   visitBlock_expr(ctx: lang.Block_exprContext): AstNode {
     return {
       kind: 'dnkBlockExpr',
-      children: [this.visit(ctx.getChild(0))],
+      children: [this.visit(ctx.getChild(0)) as DnkBlock],
     };
   }
   visitIf_expr(ctx: lang.If_exprContext): AstNode {
@@ -210,7 +210,9 @@ export class BuildAstVisitor
         dnkEmpty,
       children: [
         this.visit(ctx._name) as DnkIdent,
-        (ctx._value && this.visit(ctx._value)) || dnkEmpty,
+        (ctx._value &&
+          (this.visit(ctx._value) as ExpressionNode | undefined)) ||
+          dnkEmpty,
       ],
     };
   }
@@ -223,7 +225,9 @@ export class BuildAstVisitor
         dnkEmpty,
       children: [
         this.visit(ctx._name) as DnkIdent,
-        (ctx._value && this.visit(ctx._value)) || dnkEmpty,
+        ((ctx._value && this.visit(ctx._value)) as
+          | ExpressionNode
+          | undefined) || dnkEmpty,
       ],
     };
   }
@@ -280,16 +284,21 @@ export class BuildAstVisitor
     };
   }
   visitFloat_lit(ctx: lang.Float_litContext): AstNode {
+    let { num, suff } =
+      (ctx._value.text!.match(/^(?<num>.+)(?<suff>[df])?$/) || {}).groups || {};
     return {
       kind: 'dnkFloatLit',
-      value: parseFloat(ctx._value.text || 'NaN'),
+      value: [suff === 'd' ? '64' : '32', parseFloat(num || 'NaN')],
       children: [],
     };
   }
   visitInt_lit(ctx: lang.Int_litContext): AstNode {
+    let { num, suff } =
+      (ctx._value.text!.match(/^(?<num>.+)(?:i(?<suff>8|16|32|64))?$/) || {})
+        .groups || {};
     return {
       kind: 'dnkIntLit',
-      value: parseInt(ctx._value.text || 'NaN'),
+      value: [suff as '8', parseInt(num || 'NaN')],
       children: [],
     };
   }
