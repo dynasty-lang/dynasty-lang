@@ -25,7 +25,7 @@ import {
   void_,
 } from './types';
 
-class NameCollectVisitor extends AstNodeVisitor<Namespace> {
+export class NameCollectVisitor extends AstNodeVisitor<Namespace> {
   visit(node: AstNode): Namespace {
     switch (node.kind) {
       case 'dnkBlock':
