@@ -4,7 +4,7 @@ export type AsmNode =
       text: string;
     }
   | {
-      kind: 'instruction';
+      kind: 'inst';
       inst: string;
       operands: string[];
     }
@@ -22,7 +22,7 @@ export function generateAsm(nodes: AsmNode[]): string {
       switch (it.kind) {
         case 'directive':
           return `  .${it.directive} ${it.operands.join(',')}`;
-        case 'instruction':
+        case 'inst':
           return `  .${it.inst} ${it.operands.join(',')}`;
         case 'label':
           return `${it.text}:`;
