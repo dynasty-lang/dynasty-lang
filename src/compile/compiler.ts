@@ -2,14 +2,24 @@ import { AstNode } from '../ast/astNode';
 import { NameCollectVisitor } from './nameCollectVisitor';
 import { Namespace } from './codegen/codeElement';
 import { AsmNode, generateAsm } from './codegen/assembly';
+import { AssemblyGenerator } from './codegen/templates';
+import { uint8 } from './types';
 
 export class DynastyCompiler {
   private rootNS: Namespace;
   private rootNode: AstNode;
+  private generator: AssemblyGenerator;
 
-  constructor(node: AstNode) {
-    this.rootNS = { callables: {}, types: {}, variables: {}, children: [] };
+  constructor(node: AstNode, file: string) {
+    this.rootNS = {
+      callables: {},
+      types: {},
+      variables: {},
+      children: [],
+      scope: 'global',
+    };
     this.rootNode = node;
+    this.generator = new AssemblyGenerator(file);
   }
 
   collectNames() {
@@ -20,6 +30,7 @@ export class DynastyCompiler {
       types: Object.assign(this.rootNS.types, ns.types),
       variables: Object.assign(this.rootNS.variables, ns.variables),
       children: [...(this.rootNS.children || []), ...(ns.children || [])],
+      scope: 'global',
     };
   }
 
@@ -28,7 +39,18 @@ export class DynastyCompiler {
   resolveUnknownTypes() {}
   resolveFuncCalls() {}
 
-  generateFuncCode() {}
+  generateFuncCode() {
+    this.generator.declareFunction({
+      name: '_toplevel_main',
+      nodes: this.generateTopLevelCode(),
+      type: {
+        kind: 'callable',
+        params: [],
+        return_type: uint8,
+      },
+      locals: this.rootNS,
+    });
+  }
 
   generateMetaCode(): AsmNode[] {
     return [];
@@ -39,12 +61,11 @@ export class DynastyCompiler {
   }
 
   generateCode(): AsmNode[] {
-    return this.generateMetaCode()
-      .concat(this.generateTopLevelCode())
-      .concat([]);
+    this.generator.appendHeadingMeta(this.generateMetaCode());
+    return this.generator.create();
   }
 
-  compile(node: AstNode): string {
+  compile(): string {
     this.resolveImports();
     this.collectNames();
     this.resolveTypeReferences();

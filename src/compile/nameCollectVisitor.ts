@@ -76,12 +76,18 @@ export class NameCollectVisitor extends AstNodeVisitor<Namespace> {
           variables: { ...prev.variables, ...next.variables },
           types: { ...prev.types, ...next.types },
           children: [...(prev.children || []), ...(next.children || [])],
+          scope: prev.scope,
         };
       },
-      { callables: {}, types: {}, variables: {} }
+      { callables: {}, types: {}, variables: {}, scope: 'local' }
     );
 
-    return { callables: {}, types: {}, variables: {}, children: [scope] };
+    return {
+      callables: {},
+      types: {},
+      variables: {},
+      children: [scope],
+    };
   }
 
   visitDnkBlockExpr(node: DnkBlockExpr): Namespace {
@@ -142,9 +148,10 @@ export class NameCollectVisitor extends AstNodeVisitor<Namespace> {
                 variables: { ...prev.variables, ...next.variables },
                 types: { ...prev.types, ...next.types },
                 children: [...(prev.children || []), ...(next.children || [])],
+                scope: prev.scope,
               };
             },
-            { callables: {}, types: {}, variables: {} }
+            { callables: {}, types: {}, variables: {}, scope: 'function' }
           ),
           name: node.value[0].value[node.value[0].value.length - 1],
           nodes: [],
@@ -242,9 +249,10 @@ export class NameCollectVisitor extends AstNodeVisitor<Namespace> {
           variables: { ...prev.variables, ...next.variables },
           types: { ...prev.types, ...next.types },
           children: [...(prev.children || []), ...(next.children || [])],
+          scope: prev.scope,
         };
       },
-      { callables: {}, types: {}, variables: {} }
+      { callables: {}, types: {}, variables: {}, scope: 'local' }
     );
   }
 

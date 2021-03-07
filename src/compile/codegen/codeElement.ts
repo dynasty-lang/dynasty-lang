@@ -16,6 +16,8 @@ export interface Callable {
 }
 
 export interface Namespace {
+  scope?: 'function' | 'local' | 'global';
+
   children?: Namespace[];
 
   types: { [key: string]: TypeDesc };
