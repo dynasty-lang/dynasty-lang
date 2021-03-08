@@ -36,7 +36,8 @@ In contrast to constants, variables are reassignable and need to mark with the `
 
 ```dn
 var foo = 7;
-# variable declarations can be explicitly typed with the same style as constants.
+# variable declarations can be explicitly typed
+# with the same style as constants.
 # var foo: int = 7;
 ```
 
