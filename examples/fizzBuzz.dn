@@ -1,5 +1,5 @@
 fn Program.main(args: string[]) -> void {
-  for(i in range(0, 100)) {
+  for(i in range(0, 100, step: 1)) {
     print({
       if (i mod 15 == 0) {
         return "FizzBuzz";
@@ -11,6 +11,6 @@ fn Program.main(args: string[]) -> void {
         return "Buzz";
       }
       return str(i);
-    });
+    }, last: "\n");
   }
 }
