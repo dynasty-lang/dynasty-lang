@@ -10,6 +10,7 @@ This can be directly compiled into assembly codes and also can use C/C++ assets 
   - [Table of Contents](#table-of-contents)
   - [Basic Grammars](#basic-grammars)
     - [Variables, Constants](#variables-constants)
+    - [Functions, Methods, Inline Code Block Expressions](#functions-methods-inline-code-block-expressions)
     - [Top-level Statements](#top-level-statements)
     - [if expression](#if-expression)
 
@@ -40,6 +41,30 @@ var foo = 7;
 # with the same style as constants.
 # var foo: int = 7;
 ```
+
+### Functions, Methods, Inline Code Block Expressions
+A function declaration has some elements; its name, some parameters if it has, optionally its return type and its body.
+If a function doesn't have an explicit return type, the compiler assumes its return type as `void`.
+
+For example:
+
+```dn
+fn foo() -> void {
+  print("FooBar");
+}
+# this has the same meaning but omitting return type:
+# fn foo() {
+#   print("FooBar");
+# }
+
+# this declaration has two parameters and explicit return type: 
+fn bar(a: int, b: str) -> str {
+  return str(a) + b;
+}
+```
+
+In future releases, omitting the return type of a function, the compiler infers its return type from its `return` statement.
+
 
 ### Top-level Statements
 Dynasty supports top-level statements like this:

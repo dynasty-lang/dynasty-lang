@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.6.0/highlight.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.6.0/styles/a11y-light.min.css"
+    />
+    <script src="assets/dynasty.js"></script>
+    <script>
+      hljs.highlightAll();
+    </script>
+  </head>
+  <body>
+    <pre class="language-dn"><code>
+      fn foo() -> void {
+        print("FooBar");
+      }
+      # this has the same meaning but omitting return type:
+      # fn foo() {
+      #   print("FooBar");
+      # }
+      
+      # this declaration has two parameters and explicit return type: 
+      fn bar(a: int, b: str) -> str {
+        return str(a) + b;
+      }
+    </code></pre>
+  </body>
+</html>
