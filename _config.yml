@@ -1,4 +1,6 @@
 theme: jekyll-theme-slate
 kramdown:
   syntax_highlighter_opts:
-    disable : true
+    disable: true
+
+title: 'Dynasty Language'
