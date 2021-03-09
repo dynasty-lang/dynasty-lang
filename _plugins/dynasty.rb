@@ -1,6 +1,7 @@
-# This "hook" is executed right before the site's pages are rendered
 Jekyll::Hooks.register :site, :pre_render do |site|
+  puts "add dynasty"
   require "rouge"
+  raise "Assertion Error"
 
   class Dynasty < RegexLexer
     title "Dynasty"
