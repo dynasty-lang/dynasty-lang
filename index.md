@@ -11,8 +11,8 @@ This can be directly compiled into assembly codes and also can use C/C++ assets 
   - [Basic Grammars](#basic-grammars)
     - [Variables, Constants](#variables-constants)
     - [Functions, Methods, Inline Code Block Expressions](#functions-methods-inline-code-block-expressions)
-    - [Top-level Statements](#top-level-statements)
     - [if expression](#if-expression)
+    - [Top-level Statements](#top-level-statements)
 
 ## Basic Grammars
 
@@ -65,6 +65,35 @@ fn bar(a: int, b: str) -> str {
 
 In future releases, omitting the return type of a function, the compiler infers its return type from its `return` statement.
 
+### if expression
+Dynasty supports `if` expression:
+
+```dn
+inv foo = if(bar) { 1 } else { 2 };
+# or
+# inv foo = if(bar) 1 else 2;
+```
+
+When you use an `if` expression without using its value, you can omit the `else` clause:
+
+```dn
+if (some_condition) {
+  print("foo");
+}
+```
+
+And only, in this case, namely the value of an `if` expression is thrown away, a block expression is regarded as not an expression but only a part of the statement.
+In other words, a `return` statement or a `yield` statement is returning to the outer context (or the caller context) from the nearest valid function context or block expression context, not the block expression immediately after the `if` or the `else`.
+
+```dn
+fn bar() {
+  # doing something
+  if (some_condition) {
+    # return from `foo` instead of breaking away from the block expression.
+    return;
+  }
+}
+```
 
 ### Top-level Statements
 Dynasty supports top-level statements like this:
@@ -91,12 +120,3 @@ for(i in range(0, 100)) {
 ```
 
 Coding with Dynasty, you no longer need to write the main function or something like it.
-
-### if expression
-Dynasty supports `if` expression:
-
-```dn
-inv foo = if(bar) { 1 } else { 2 };
-# or
-# inv foo = if(bar) 1 else 2;
-```
