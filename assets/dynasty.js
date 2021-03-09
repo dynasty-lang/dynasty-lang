@@ -17,6 +17,21 @@ hljs.registerLanguage('dynasty', function (high) {
     'as',
   ];
 
+  const BUILTIN_TYPES = [
+    'int',
+    'int8',
+    'int16',
+    'int32',
+    'int64',
+    'float',
+    'float32',
+    'float64',
+    'string',
+    'void',
+  ];
+
+  const BUILT_INS = ['str', 'stoi', 'stof', 'print'];
+
   const STRING = {
     contains: [high.BACKSLASH_ESCAPE],
     className: 'string',
@@ -40,6 +55,7 @@ hljs.registerLanguage('dynasty', function (high) {
       },
     ],
   };
+
   const NUMBER = {
     className: 'number',
     relevance: 0,
@@ -67,7 +83,11 @@ hljs.registerLanguage('dynasty', function (high) {
     name: 'Dynasty',
     aliases: ['dn'],
     case_insensitive: false,
-    keywords: RESERVED_WORDS,
+    keywords: {
+      keyword: RESERVED_WORDS,
+      built_in: BUILT_INS,
+      type: BUILTIN_TYPES,
+    },
     contains: [STRING, NUMBER, BLOCK_COMMENT, LINE_COMMENT],
   };
 });
