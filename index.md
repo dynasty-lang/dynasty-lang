@@ -100,7 +100,7 @@ fn bar() {
 Dynasty supports top-level statements like this:
 
 ```dn
-print("Hello, world!")
+print("Hello, world!");
 ```
 
 ```dn
