@@ -71,5 +71,3 @@ hljs.registerLanguage('dynasty', function (high) {
     contains: [STRING, NUMBER, BLOCK_COMMENT, LINE_COMMENT],
   };
 });
-
-// hljs.registerAliases('dn', 'dynasty');
