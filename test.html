@@ -9,15 +9,21 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.6.0/highlight.min.js"></script>
     <link
       rel="stylesheet"
-      href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.6.0/styles/a11y-light.min.css"
+      href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.6.0/styles/vs2015.min.css"
     />
     <script src="assets/dynasty.js"></script>
     <script>
       hljs.highlightAll();
     </script>
+    <style>
+      pre.language-dn code {
+        font-family: 'Courier New', Courier, monospace;
+      }
+    </style>
   </head>
   <body>
     <pre class="language-dn"><code>
+      from hoge import *rest;
       fn foo() -> void {
         print("FooBar");
       }
@@ -27,7 +33,7 @@
       # }
       
       # this declaration has two parameters and explicit return type: 
-      fn bar(a: int, b: str) -> str {
+      fn bar(a: int, b: string) -> string {
         return str(a) + b;
       }
     </code></pre>

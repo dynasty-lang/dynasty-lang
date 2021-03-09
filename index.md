@@ -89,7 +89,7 @@ In other words, a `return` statement or a `yield` statement is returning to the 
 fn bar() {
   # doing something
   if (some_condition) {
-    # return from `foo` instead of breaking away
+    # return from `bar` instead of breaking away
     # from the block expression.
     return;
   }
