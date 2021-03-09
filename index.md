@@ -82,8 +82,8 @@ if (some_condition) {
 }
 ```
 
-And only, in this case, namely the value of an `if` expression is thrown away, a block expression is regarded as not an expression but only a part of the statement.
-In other words, a `return` statement or a `yield` statement is returning to the outer context (or the caller context) from the nearest valid function context or block expression context, not the block expression immediately after the `if` or the `else`.
+And only, in this case, namely, when you throw away the value of an `if` expression, a block expression is regarded as not an expression but only a part of the statement.
+In other words, a `return` statement or a `yield` statement is returning to the outer context (or the caller context) from the nearest proper function context or block expression context, not the block expression immediately after the `if` or the `else`.
 
 ```dn
 fn bar() {
