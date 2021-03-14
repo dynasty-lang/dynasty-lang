@@ -3,3 +3,5 @@ dist/
 .antlr/
 generated/
 tsconfig.tsbuildinfo
+*.[Ss]
+*.exe

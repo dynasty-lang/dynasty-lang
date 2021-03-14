@@ -1,85 +1,59 @@
-export type NodeKind =
-  | 'dnkTop'
-  | 'dnkIdent'
-  | 'dnkBlock'
-  | 'dnkBlockExpr'
-  | 'dnkFor'
-  | 'dnkWhile'
-  | 'dnkTypeDecl'
-  | 'dnkTypeDesc'
-  | 'dnkTypeLit'
-  | 'dnkMemberItem'
-  | 'dnkArrayTypeLit'
-  | 'dnkImport'
-  | 'dnkImportFrom'
-  | 'dnkImportList'
-  | 'dnkImportName'
-  | 'dnkFnDecl'
-  | 'dnkIfExpr'
-  | 'dnkVarDecl'
-  | 'dnkConstDecl'
-  | 'dnkParamList'
-  | 'dnkParamItem'
-  | 'dnkReturn'
-  | 'dnkBreak'
-  | 'dnkContinue'
-  | 'dnkCallExpr'
-  | 'dnkArgList'
-  | 'dnkNamedArg'
-  | 'dnkNamedArgList'
-  | 'dnkFloatLit'
-  | 'dnkIntLit'
-  | 'dnkStrLit'
-  | 'dnkObjectLit'
-  | 'dnkArrayLit'
-  | 'dnkOperations'
-  | 'dnkMemberAccessOp'
-  | 'dnkArrayAccessOp'
-  | 'dnkAssignOp'
-  | 'dnkPar'
-  | 'dnkFqn'
-  | 'dnkStmt'
-  | 'dnkEmpty';
+import { AstNode, DnkEmpty, unaryOperators } from './nodeKind';
 
-export const unaryOperators = { not: 1 };
-export const biaryOperators = {
-  '**': 7,
-  '*': 6,
-  '/': 6,
-  mod: 6,
-  '+': 5,
-  '-': 5,
-  '&': 4,
-  '|': 4,
-  '^': 4,
-  '<<': 3,
-  '>>': 3,
-  '>': 2,
-  '>=': 2,
-  '==': 2,
-  '!=': 2,
-  '<=': 2,
-  '<': 2,
-  and: 1,
-  or: 1,
-  xor: 1,
-  '=': 0,
-};
+export { assignOperators, biaryOperators, unaryOperators } from './nodeKind';
+export type {
+  AssignOperators,
+  AstNode,
+  BiaryOperators,
+  DnkArgList,
+  DnkArrayAccessOp,
+  DnkArrayLit,
+  DnkArrayTypeLit,
+  DnkBlockExpr,
+  DnkCallExpr,
+  DnkEmpty,
+  DnkFloatLit,
+  DnkFqn,
+  DnkIdent,
+  DnkIfExpr,
+  DnkImportList,
+  DnkImportName,
+  DnkIntLit,
+  DnkMemberAccessOp,
+  DnkMemberItem,
+  DnkNamedArg,
+  DnkObjectLit,
+  DnkObjectLitMember,
+  DnkOperations,
+  DnkPar,
+  DnkParamItem,
+  DnkParamList,
+  DnkStrLit,
+  DnkTypeLit,
+  ExpressionNode,
+  Operations,
+  TypeDescriptorNode,
+  UnaryOperators,
+} from './nodeKind';
 
-export type UnaryOperators = keyof typeof unaryOperators;
-export type BiaryOperators = keyof typeof biaryOperators;
-export type Operations = BiaryOperators | UnaryOperators;
+export type DynastyNodeKind = AstNode['kind'];
+
 export type NodeValue = AstNode | string | number | undefined;
 
-export interface AstNode {
-  kind: NodeKind;
-  value?: NodeValue | NodeValue[];
-  children: AstNode[];
-}
+export const dnkEmpty: DnkEmpty = { kind: 'dnkEmpty', children: [] };
 
-export const dnkEmpty: AstNode = { kind: 'dnkEmpty', children: [] };
-
-export function dumpNodeValue(value: NodeValue | NodeValue[]): string {
+export function dumpNodeValue(
+  value: NodeValue | NodeValue[],
+  literal?: 'str' | 'number'
+): string {
+  if (literal === 'str') {
+    if (!(value instanceof Array)) {
+      throw new Error('assertion error');
+    }
+    return `${value[1] == 'r' ? 'r' : ''}"${value[1]}"`;
+  } else if (literal === 'number') {
+    return (value || 'NaN').toString();
+  }
   if (value instanceof Array) {
     return value.map((it) => dumpNodeValue(it)).join(', ');
   }
@@ -103,17 +77,18 @@ export function dumpNodeValue(value: NodeValue | NodeValue[]): string {
       case 'dnkFloatLit':
         return (node.value as number).toString();
       case 'dnkStrLit':
-        return JSON.stringify(node.value as string);
+        return `${node.value[1] == 'r' ? 'r' : ''}"${node.value[1]}"`;
       case 'dnkArrayAccessOp':
         return `${dumpNodeValue(node.children[0])}[${dumpNodeValue(
           node.children[1]
         )}]`;
       case 'dnkArrayTypeLit':
-        return `${dumpNodeValue(
-          node.children[0]
-        )}${(node.value as AstNode[]).map((it) => `[${dumpNodeValue(it)}]`)}`;
+        return `${dumpNodeValue(node.children[0])}${(node.value instanceof Array
+          ? node.value
+          : []
+        ).map((it: any) => `[${dumpNodeValue(it)}]`)}`;
       case 'dnkParamList':
-        return `(${node.children.map(dumpNodeValue).join()})`;
+        return `(${node.children.map((it) => dumpNodeValue(it)).join()})`;
       case 'dnkParamItem':
         return `${dumpNodeValue(node.children[0])}: ${dumpNodeValue(
           node.children[1]
@@ -122,7 +97,7 @@ export function dumpNodeValue(value: NodeValue | NodeValue[]): string {
         return '';
       case 'dnkCallExpr':
         return `${dumpNodeValue(node.value)}(${node.children
-          .map(dumpNodeValue)
+          .map((it) => dumpNodeValue(it))
           .join(', ')})`;
       case 'dnkNamedArg':
         return `${dumpNodeValue(node.children[0])}: ${dumpNodeValue(
@@ -138,11 +113,14 @@ export function dumpNodeValue(value: NodeValue | NodeValue[]): string {
 
 export function dumpAst(node: AstNode, depth = 0): void {
   let details = '';
-  if (node.value) {
-    details = dumpNodeValue(node.value);
+  if ('value' in node) {
+    details = dumpNodeValue(
+      node.value,
+      node.kind === 'dnkStrLit' ? 'str' : undefined
+    );
   }
   console.log(`${'  '.repeat(depth)}${node.kind} ${details || ''}`);
-  node.children.forEach((it) => {
+  node.children.forEach((it: any) => {
     dumpAst(it, depth + 1);
   });
 }
