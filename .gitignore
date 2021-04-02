@@ -2,5 +2,6 @@ node_modules/
 dist/
 .antlr/
 generated/
-*.[sS]
+tsconfig.tsbuildinfo
+*.[Ss]
 *.exe

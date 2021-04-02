@@ -72,6 +72,7 @@ TYPE: 'type';
 FROM: 'from';
 IMPORT: 'import';
 RETURN: 'return';
+YIELD: 'yield';
 CONTINUE: 'continue';
 BREAK: 'break';
 ELSE: 'else';

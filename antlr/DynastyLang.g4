@@ -5,6 +5,7 @@ top: (stmt | toplevel_decl)* EOF;
 block_statements: (
 		stmt
 		| return_stmt
+		| yield_stmt
 		| continue_stmt
 		| break_stmt
 	)*;
@@ -118,6 +119,7 @@ par_list: (params += par_item COMMA)* params += par_item;
 par_item: name = ident COLON type = type_desc;
 
 return_stmt: RETURN value = expr? SEMICOLON;
+yield_stmt: YIELD value = expr? SEMICOLON;
 continue_stmt: CONTINUE SEMICOLON;
 break_stmt: BREAK SEMICOLON;
 arg_list: (args += expr COMMA)* (

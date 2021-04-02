@@ -8,7 +8,18 @@ import {
   unaryOperators,
   biaryOperators,
   BiaryOperators,
+  AssignOperators,
+  DnkFqn,
+  DnkIdent,
+  TypeDescriptorNode,
+  DnkMemberItem,
+  DnkImportList,
+  DnkImportName,
+  DnkParamList,
+  DnkParamItem,
+  DnkObjectLitMember,
 } from '../ast/astNode';
+import { DnkNamedArg, ExpressionNode, UnaryOperators } from '../ast/nodeKind';
 import * as lang from '../generated/DynastyLangParser';
 import { DynastyLangVisitor } from '../generated/DynastyLangVisitor';
 
@@ -41,7 +52,7 @@ export class BuildAstVisitor
   visitIdent(ctx: lang.IdentContext): AstNode {
     return {
       kind: 'dnkIdent',
-      value: ctx._name.text,
+      value: ctx._name.text!,
       children: [],
     };
   }
@@ -60,22 +71,25 @@ export class BuildAstVisitor
   visitFor_stmt(ctx: lang.For_stmtContext): AstNode {
     return {
       kind: 'dnkFor',
-      value: [this.visit(ctx._name), this.visit(ctx._iter)],
+      value: [
+        this.visit(ctx._name) as DnkIdent,
+        this.visit(ctx._iter) as ExpressionNode,
+      ],
       children: [this.visit(ctx._stmts)],
     };
   }
   visitWhile_stmt(ctx: lang.While_stmtContext): AstNode {
     return {
       kind: 'dnkWhile',
-      value: this.visit(ctx._cond),
+      value: this.visit(ctx._cond) as ExpressionNode,
       children: [this.visit(ctx._stmts)],
     };
   }
   visitType_decl(ctx: lang.Type_declContext): AstNode {
     return {
       kind: 'dnkTypeDecl',
-      value: this.visit(ctx._name),
-      children: [this.visit(ctx._desc)],
+      value: this.visit(ctx._name) as DnkIdent,
+      children: [this.visit(ctx._desc) as TypeDescriptorNode],
     };
   }
   visitType_desc(ctx: lang.Type_descContext): AstNode {
@@ -87,8 +101,10 @@ export class BuildAstVisitor
   visitType_lit(ctx: lang.Type_litContext): AstNode {
     return {
       kind: 'dnkTypeLit',
-      value: ctx._super_ && this.visit(ctx._super_),
-      children: this.aggregateChildren(ctx._members),
+      value:
+        (ctx._super_ && (this.visit(ctx._super_) as DnkFqn | undefined)) ||
+        dnkEmpty,
+      children: this.aggregateChildren(ctx._members) as DnkMemberItem[],
     };
   }
   visitMember_list(ctx: lang.Member_listContext): AstNode {
@@ -96,8 +112,11 @@ export class BuildAstVisitor
   }
   visitMember_item(ctx: lang.Member_itemContext): AstNode {
     return {
-      kind: 'dnkTypeLit',
-      children: [this.visit(ctx._name), this.visit(ctx._name)],
+      kind: 'dnkMemberItem',
+      children: [
+        this.visit(ctx._name) as DnkIdent,
+        this.visit(ctx._desc) as TypeDescriptorNode,
+      ],
     };
   }
   visitArray_type_lit(ctx: lang.Array_type_litContext): AstNode {
@@ -106,7 +125,7 @@ export class BuildAstVisitor
       value: ctx._dims.map(
         (it) => (it._length && this.visit(it._length)) || dnkEmpty
       ),
-      children: [this.visit(ctx.getChild(0))],
+      children: [this.visit(ctx.getChild(0)) as TypeDescriptorNode],
     };
   }
   visitImport_decl(ctx: lang.Import_declContext): AstNode {
@@ -115,21 +134,28 @@ export class BuildAstVisitor
   visitImport_stmt(ctx: lang.Import_stmtContext): AstNode {
     return {
       kind: 'dnkImport',
-      children: [this.visit(ctx._module), ctx._alt && this.visit(ctx._alt)],
+      children: [
+        this.visit(ctx._module) as DnkFqn,
+        ctx._alt && (this.visit(ctx._alt) as DnkIdent),
+      ],
     };
   }
   visitImport_from(ctx: lang.Import_fromContext): AstNode {
     return {
       kind: 'dnkImportFrom',
-      value: this.visit(ctx._module),
-      children: this.aggregateChildren(ctx._list),
+      value: this.visit(ctx._module) as DnkFqn,
+      children: [this.visit(ctx._list) as DnkImportList],
     };
   }
   visitImport_list(ctx: lang.Import_listContext): AstNode {
     return {
       kind: 'dnkImportList',
-      value: ctx._rest && this.visit(ctx._rest._name),
-      children: (ctx._names || []).map((it) => this.visit(it)),
+      value:
+        (ctx._rest && (this.visit(ctx._rest._name) as DnkIdent | undefined)) ||
+        dnkEmpty,
+      children: (ctx._names || []).map((it) =>
+        this.visit(it)
+      ) as DnkImportName[],
     };
   }
   visitImport_rest(ctx: lang.Import_restContext): AstNode {
@@ -138,16 +164,23 @@ export class BuildAstVisitor
   visitImport_name(ctx: lang.Import_nameContext): AstNode {
     return {
       kind: 'dnkImportName',
-      children: [this.visit(ctx._name), ctx._alt && this.visit(ctx._alt)],
+      children: [
+        this.visit(ctx._name) as DnkIdent,
+        ctx._alt && (this.visit(ctx._alt) as DnkIdent),
+      ],
     };
   }
   visitFn_decl(ctx: lang.Fn_declContext): AstNode {
     return {
       kind: 'dnkFnDecl',
       value: [
-        this.visit(ctx._name),
-        (ctx._params && this.visit(ctx._params)) || dnkEmpty,
-        (ctx._ret_type && this.visit(ctx._ret_type)) || dnkEmpty,
+        this.visit(ctx._name) as DnkFqn,
+        (ctx._params &&
+          (this.visit(ctx._params) as DnkParamList | undefined)) ||
+          dnkEmpty,
+        (ctx._ret_type &&
+          (this.visit(ctx._ret_type) as TypeDescriptorNode | undefined)) ||
+          dnkEmpty,
       ],
       children: [this.visit(ctx._stmts)],
     };
@@ -161,19 +194,22 @@ export class BuildAstVisitor
   visitIf_expr(ctx: lang.If_exprContext): AstNode {
     return {
       kind: 'dnkIfExpr',
-      value: this.visit(ctx._cond),
+      value: this.visit(ctx._cond) as ExpressionNode,
       children: [
         this.visit(ctx._then),
         (ctx._else_ && [this.visit(ctx._else_)]) || [],
-      ].flat(),
+      ].flat() as [ExpressionNode, ExpressionNode | undefined],
     };
   }
   visitVar_decl(ctx: lang.Var_declContext): AstNode {
     return {
       kind: 'dnkVarDecl',
-      value: (ctx._type_ && this.visit(ctx._type_)) || dnkEmpty,
+      value:
+        (ctx._type_ &&
+          (this.visit(ctx._type_) as TypeDescriptorNode | undefined)) ||
+        dnkEmpty,
       children: [
-        this.visit(ctx._name),
+        this.visit(ctx._name) as DnkIdent,
         (ctx._value && this.visit(ctx._value)) || dnkEmpty,
       ],
     };
@@ -181,9 +217,12 @@ export class BuildAstVisitor
   visitConst_decl(ctx: lang.Const_declContext): AstNode {
     return {
       kind: 'dnkConstDecl',
-      value: (ctx._type_ && this.visit(ctx._type_)) || dnkEmpty,
+      value:
+        (ctx._type_ &&
+          (this.visit(ctx._type_) as TypeDescriptorNode | undefined)) ||
+        dnkEmpty,
       children: [
-        this.visit(ctx._name),
+        this.visit(ctx._name) as DnkIdent,
         (ctx._value && this.visit(ctx._value)) || dnkEmpty,
       ],
     };
@@ -191,13 +230,18 @@ export class BuildAstVisitor
   visitPar_list(ctx: lang.Par_listContext): AstNode {
     return {
       kind: 'dnkParamList',
-      children: (ctx._params || []).map((it) => this.visit(it)),
+      children: (ctx._params || []).map((it) =>
+        this.visit(it)
+      ) as DnkParamItem[],
     };
   }
   visitPar_item(ctx: lang.Par_itemContext): AstNode {
     return {
       kind: 'dnkParamItem',
-      children: [this.visit(ctx._name), this.visit(ctx._type)],
+      children: [
+        this.visit(ctx._name) as DnkIdent,
+        this.visit(ctx._type) as TypeDescriptorNode,
+      ],
     };
   }
   visitReturn_stmt(ctx: lang.Return_stmtContext): AstNode {
@@ -206,26 +250,33 @@ export class BuildAstVisitor
       children: [this.visit(ctx._value)],
     };
   }
+  visitYield_stmt(ctx: lang.Yield_stmtContext): AstNode {
+    return {
+      kind: 'dnkYield',
+      children: [this.visit(ctx._value)],
+    };
+  }
   visitCall_expr(ctx: lang.Call_exprContext): AstNode {
     return {
       kind: 'dnkCallExpr',
-      value: this.visit(ctx._name),
-      children: (ctx._args && this.collectArgList(ctx._args)) || dnkEmpty,
+      value: this.visit(ctx._name) as DnkIdent,
+      children: (ctx._args &&
+        (this.collectArgList(ctx._args) as ExpressionNode[])) || [dnkEmpty],
     };
   }
   visitArg_list(ctx: lang.Arg_listContext): AstNode {
     throw new Error('assertion error: this is unreachable code.');
   }
   visitNamed_arg_list(ctx: lang.Named_arg_listContext): AstNode {
-    return {
-      kind: 'dnkNamedArgList',
-      children: ctx._args.map((it) => this.visit(it)),
-    };
+    throw new Error('assertion error: this is unreachable code.');
   }
   visitNamed_arg(ctx: lang.Named_argContext): AstNode {
     return {
       kind: 'dnkNamedArg',
-      children: [this.visit(ctx._name), this.visit(ctx._value)],
+      children: [
+        this.visit(ctx._name) as DnkIdent,
+        this.visit(ctx._value) as ExpressionNode,
+      ],
     };
   }
   visitFloat_lit(ctx: lang.Float_litContext): AstNode {
@@ -256,14 +307,14 @@ export class BuildAstVisitor
   visitPar(ctx: lang.ParContext): AstNode {
     return {
       kind: 'dnkPar',
-      children: [this.visit(ctx._expression)],
+      children: [this.visit(ctx._expression) as ExpressionNode],
     };
   }
 
   visitFqn(ctx: lang.FqnContext): AstNode {
     return {
       kind: 'dnkFqn',
-      value: ctx._names.map((it) => it.text),
+      value: ctx._names.map((it) => it.text!),
       children: [],
     };
   }
@@ -271,8 +322,11 @@ export class BuildAstVisitor
   visitUnary_op(ctx: lang.Unary_opContext): AstNode {
     return {
       kind: 'dnkOperations',
-      value: ctx._op.text || dnkEmpty,
-      children: [this.visit(ctx._right)],
+      value: (ctx._op.text as Operations) || dnkEmpty,
+      children: [this.visit(ctx._right), undefined] as [
+        ExpressionNode,
+        undefined
+      ],
     };
   }
 
@@ -285,8 +339,10 @@ export class BuildAstVisitor
   visitDirect_call_expr(ctx: lang.Direct_call_exprContext): AstNode {
     return {
       kind: 'dnkCallExpr',
-      value: this.visit(ctx._callee),
-      children: (ctx._args && this.aggregateChildren(ctx._args)) || dnkEmpty,
+      value: this.visit(ctx._callee) as ExpressionNode,
+      children: ((ctx._args && this.aggregateChildren(ctx._args)) || [
+        dnkEmpty,
+      ]) as (ExpressionNode | DnkNamedArg)[],
     };
   }
   visitExpr_block(ctx: lang.Expr_blockContext): AstNode {
@@ -304,13 +360,19 @@ export class BuildAstVisitor
   visitMember_access_expr(ctx: lang.Member_access_exprContext): AstNode {
     return {
       kind: 'dnkMemberAccessOp',
-      children: [this.visit(ctx._ref_from), this.visit(ctx._accessor)],
+      children: [
+        this.visit(ctx._ref_from) as ExpressionNode,
+        this.visit(ctx._accessor) as DnkIdent,
+      ],
     };
   }
   visitArray_access_expr(ctx: lang.Array_access_exprContext): AstNode {
     return {
       kind: 'dnkArrayAccessOp',
-      children: [this.visit(ctx._ref_from), this.visit(ctx._accessor)],
+      children: [
+        this.visit(ctx._ref_from) as ExpressionNode,
+        this.visit(ctx._accessor) as ExpressionNode,
+      ],
     };
   }
   visitExpr_ident(ctx: lang.Expr_identContext): AstNode {
@@ -343,22 +405,22 @@ export class BuildAstVisitor
   visitArray_lit(ctx: lang.Array_litContext): AstNode {
     return {
       kind: 'dnkArrayLit',
-      children: ctx._items.map((it) => this.visit(it)),
+      children: ctx._items.map((it) => this.visit(it)) as ExpressionNode[],
     };
   }
 
   visitObj_lit(ctx: lang.Obj_litContext): AstNode {
     return {
-      kind: 'dnkArrayLit',
-      children: ctx._items.map((it) => this.visit(it)),
+      kind: 'dnkObjectLit',
+      children: ctx._items.map((it) => this.visit(it)) as DnkObjectLitMember[],
     };
   }
 
   visitObj_member(ctx: lang.Obj_memberContext): AstNode {
     return {
-      kind: 'dnkObjectLit',
-      value: ctx._key.text,
-      children: [this.visit(ctx._value)],
+      kind: 'dnkObjectLitMember',
+      value: ctx._key.text!,
+      children: [this.visit(ctx._value) as ExpressionNode],
     };
   }
   // #endregion
@@ -424,7 +486,7 @@ export class BuildAstVisitor
           next.push({
             kind: 'dnkOperations',
             value: element,
-            children: [current[i + 1] as AstNode],
+            children: [current[i + 1] as ExpressionNode, undefined],
           });
           skipNext = true;
           continue;
@@ -445,7 +507,9 @@ export class BuildAstVisitor
             throw new Error(
               `syntax error:corrupted formula: "${formula
                 .map((it) =>
-                  typeof it === 'string' ? it : (it.value || '').toString()
+                  typeof it === 'string'
+                    ? it
+                    : ((it as { value: any }).value || '').toString()
                 )
                 .join(' ')}"`
             );
@@ -457,7 +521,10 @@ export class BuildAstVisitor
             next.push({
               kind: 'dnkOperations',
               value: element,
-              children: [current[i - 1] as AstNode, current[i + 1] as AstNode],
+              children: [
+                current[i - 1] as ExpressionNode,
+                current[i + 1] as ExpressionNode,
+              ],
             });
             continue;
           }
@@ -476,7 +543,7 @@ export class BuildAstVisitor
           next.push({
             kind: 'dnkAssignOp',
             value: element,
-            children: [assignee, current[i + 1] as AstNode],
+            children: [assignee, current[i + 1] as ExpressionNode],
           });
           // #endregion
         }
