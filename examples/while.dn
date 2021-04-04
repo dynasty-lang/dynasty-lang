@@ -1,0 +1,8 @@
+# Note: This use of `while` is not recommended. Use `for` in actual codes instead.
+
+var i = 10;
+while(i>0){
+ i=i-1;
+}
+
+

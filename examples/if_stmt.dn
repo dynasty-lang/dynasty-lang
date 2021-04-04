@@ -1,0 +1,9 @@
+var res:str="";
+
+if (condition){
+ # conditionが真の時の処理
+ str="Condition is evaluated as true";
+}else{
+ # conditionが偽の時の処理
+ str="Condition is evaluated as false";
+}

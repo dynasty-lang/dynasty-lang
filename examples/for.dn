@@ -1,0 +1,4 @@
+int i=0;
+for(e in arr){
+ # arrの要素が順にeに代入されて反復
+}
