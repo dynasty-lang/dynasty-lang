@@ -1,0 +1,3 @@
+inv a: str = "hogehoge"; # immutable (invariant)
+var b: int = 0; # mutable (variant)
+b=b+1

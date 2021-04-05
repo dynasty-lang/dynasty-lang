@@ -1,0 +1,6 @@
+var cond:int=1;
+inv res1:int=if (cond>0) 1 else 0; # i==1
+
+var cond:int=100;
+inv res2:int=if (cond<100) 1 else 0; # i==0
+
