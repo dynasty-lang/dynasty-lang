@@ -33,7 +33,7 @@
     "@types/node": "^15.6.1",
     "@types/mocha": "^8.2.2",
     "antlr4ts-cli": "^0.5.0-alpha.4",
-    "esbuild": "^0.12.1",
+    "esbuild": "^0.12.5",
     "expect": "^26.6.2",
     "mocha": "^8.3.2",
     "ts-loader": "^9.2.2",
