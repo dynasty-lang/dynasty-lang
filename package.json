@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@types/command-line-args": "^5.0.0",
-    "@types/node": "^15.12.2",
+    "@types/node": "^15.12.4",
     "@types/mocha": "^8.2.2",
     "antlr4ts-cli": "^0.5.0-alpha.4",
     "esbuild": "^0.12.9",
